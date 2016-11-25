@@ -534,7 +534,7 @@ class flowClassifier(app_manager.RyuApp):
                     print "failed installing flow mod"
 
 
-            if ipv4_pkt.proto == 17
+            if ipv4_pkt.proto == 17:
                 print "udp packet received"
                 out_port,udpport,sd  = self.get_udp_outport(dpid,ipv4_pkt.dst,ipv4_pkt.src,udp_pkt.dst_port,udp_pkt.src_port)
                 if not out_port:
