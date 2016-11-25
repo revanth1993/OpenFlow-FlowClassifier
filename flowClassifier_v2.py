@@ -72,7 +72,7 @@ class flowClassifier(app_manager.RyuApp):
                         print "--------------------------------------------------------"
                         self.flowDB = ast.literal_eval(data)
                         print self.flowDB
-                        print "--------------------------------------------------------"
+                        print "-------------------------------------------------------"
                 except:
                     continue
 
