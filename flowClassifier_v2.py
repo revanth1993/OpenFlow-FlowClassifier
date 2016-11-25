@@ -84,10 +84,10 @@ class flowClassifier(app_manager.RyuApp):
         if str(srcip) in self.flowDB:
 
             if str(dstip) in self.flowDB[srcip]:
-                if 'dropped' or 'installed' in self.flowDB[srcip][dstip]["arp"]:
+                if 'dropped' or 'installed' in self.flowDB[srcip][dstip]["arp"]['default']:
                     print "decision already taken wrt this arp packet"
-                    return port
-                for switches in self.flowDB[srcip][dstip]["arp"][0]:
+                    return 'i'
+                for switches in self.flowDB[srcip][dstip]["arp"]['default'][0]:
                     if s!=switches[0]:
                         switch = switches[0]
                         hexdpid = '0x'+switch[4:]
@@ -99,7 +99,6 @@ class flowClassifier(app_manager.RyuApp):
                             print "successfully installed arp flow in the switch"
                         else:
                             print "failed installing arp flow mod"
-
                     if s == switches[0]:
                         port = switches[1]
         return port
@@ -114,10 +113,14 @@ class flowClassifier(app_manager.RyuApp):
                 i=False
                 if 'icmp' not in self.flowDB[srcip][dstip]:
                     print "no icmp entry!! dropping"
-                    self.flowDB[srcip][dstip]["icmp"] = [[s],'dropped']
+                    self.flowDB[srcip][dstip]["icmp"] = {}
+                    self.flowDB[srcip][dstip]["icmp"]['default'] = [[s],'dropped']
                     return port
-                for switches in self.flowDB[srcip][dstip]["icmp"]:
-                    if i:
+                if 'dropped' or 'installed' in self.flowDB[srcip][dstip]["icmp"]['default']:
+                    print "decision already taken wrt this icmp packet"
+                    return 'i'
+                for switches in self.flowDB[srcip][dstip]["icmp"]['default'][0]:
+                    if switches[0]!=s:
                         switch = switches[0]
                         hexdpid = '0x'+switch[4:]
                         out_port = switches[1]
@@ -128,14 +131,14 @@ class flowClassifier(app_manager.RyuApp):
                             print "successfully installed icmp flow in the switch"
                         else:
                             print "failed installing icmp flow mod"
-                    i = True;
                     if s == switches[0]:
                         port = switches[1]
             else:
 #		destination ip not found
                 print "no such dstip entry found updating db status to dropped"
                 self.flowDB[str(srcip)][str(dstip)] = {}
-                self.flowDB[str(srcip)][str(dstip)]['icmp'] = [[s],'dropped']
+                self.flowDB[str(srcip)][str(dstip)]['icmp']={}
+                self.flowDB[str(srcip)][str(dstip)]['icmp']['default'] = [[s],'dropped']
                 print self.flowDB
                 return port
 
@@ -143,7 +146,8 @@ class flowClassifier(app_manager.RyuApp):
             print "no such entry found updating db status to dropped"
             self.flowDB[str(srcip)] = {}
             self.flowDB[str(srcip)][str(dstip)] = {}
-            self.flowDB[str(srcip)][str(dstip)]['icmp'] = [[s],'dropped']
+            self.flowDB[str(srcip)][str(dstip)]['icmp'] = {}
+            self.flowDB[str(srcip)][str(dstip)]['icmp']['default'] = [[s],'dropped']
             print self.flowDB
             return port
 
@@ -333,9 +337,14 @@ class flowClassifier(app_manager.RyuApp):
             if dstip in self.flowDB[srcip]:
                 if protocol in self.flowDB[srcip][dstip]:
                     if protocol == 'arp':
-                        self.flowDB[srcip][dstip]['arp'] = [flow,status]
+                        print "no icmp entry!! dropping"
+                        self.flowDB[srcip][dstip]["arp"]={}
+                        self.flowDB[srcip][dstip]["arp"]['default'] = [flow,status]
+
                     if protocol == 'icmp':
-                        self.flowDB[srcip][dstip]['icmp'] = [flow,status]
+                        self.flowDB[srcip][dstip]["icmp"]={}
+                        self.flowDB[srcip][dstip]["icmp"]['default'] = [flow,status]
+
                     else:
                         self.flowDB[srcip][dstip][protocol] = {}
                         self.flowDB[srcip][dstip][protocol][port] = [flow,status]
@@ -343,9 +352,13 @@ class flowClassifier(app_manager.RyuApp):
             else:
                 self.flowDB[srcip][dstip]={}
                 if protocol == 'arp':
-                    self.flowDB[srcip][dstip]['arp'] = [port,flow,status]
+                    self.flowDB[srcip][dstip]["arp"]={}
+                    self.flowDB[srcip][dstip]["arp"]['default'] = [flow,status]
+
                 if protocol == 'icmp':
-                    self.flowDB[srcip][dstip]['icmp'] = [port,flow,status]
+                    self.flowDB[srcip][dstip]["icmp"]={}
+                    self.flowDB[srcip][dstip]["icmp"]['default'] = [flow,status]
+
                 else:
                     self.flowDB[srcip][dstip][protocol] = {}
                     self.flowDB[srcip][dstip][protocol][port] = [flow,status]
@@ -354,9 +367,12 @@ class flowClassifier(app_manager.RyuApp):
             self.flowDB[srcip]={}
             self.flowDB[srcip][dstip]={}
             if protocol == 'arp':
-                self.flowDB[srcip][dstip]['arp'] = [port,flow,status]
+                self.flowDB[srcip][dstip]["arp"]={}
+                self.flowDB[srcip][dstip]["arp"]['default'] = [flow,status]
+
             if protocol == 'icmp':
-                self.flowDB[srcip][dstip]['icmp'] = [port,flow,status]
+                self.flowDB[srcip][dstip]["icmp"]={}
+                self.flowDB[srcip][dstip]["icmp"]['default'] = [flow,status]
             else:
                 self.flowDB[srcip][dstip][protocol] = {}
                 self.flowDB[srcip][dstip][protocol][port] = [flow,status]
@@ -430,7 +446,13 @@ class flowClassifier(app_manager.RyuApp):
                     print "Application not connected"
 
                 return
+            if out_port == 'i':
+                print "decision already taken"
+                return
+
+
             print "forwarding the arp packet out of output port ",out_port
+
 
             actions = [parser.OFPActionOutput(int(out_port))]
             data = None
