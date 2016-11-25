@@ -333,11 +333,13 @@ class flowClassifier(app_manager.RyuApp):
             if dstip in self.flowDB[srcip]:
                 if protocol in self.flowDB[srcip][dstip]:
                     if protocol == 'arp':
-                        self.flowDB[srcip][dstip]['arp'] = [port,flow,status]
+                        self.flowDB[srcip][dstip]['arp'] = [flow,status]
                     if protocol == 'icmp':
-                        self.flowDB[srcip][dstip]['icmp'] = [port,flow,status]
+                        self.flowDB[srcip][dstip]['icmp'] = [flow,status]
                     else:
-                        self.flowDB[srcip][dstip][protocol] = [port,flow,status]
+                        self.flowDB[srcip][dstip][protocol] = {}
+                        self.flowDB[srcip][dstip][protocol][port] = [flow,status]
+
             else:
                 self.flowDB[srcip][dstip]={}
                 if protocol == 'arp':
@@ -345,7 +347,8 @@ class flowClassifier(app_manager.RyuApp):
                 if protocol == 'icmp':
                     self.flowDB[srcip][dstip]['icmp'] = [port,flow,status]
                 else:
-                    self.flowDB[srcip][dstip][protocol] = [port,flow,status]
+                    self.flowDB[srcip][dstip][protocol] = {}
+                    self.flowDB[srcip][dstip][protocol][port] = [flow,status]
 
         else:
             self.flowDB[srcip]={}
@@ -355,7 +358,9 @@ class flowClassifier(app_manager.RyuApp):
             if protocol == 'icmp':
                 self.flowDB[srcip][dstip]['icmp'] = [port,flow,status]
             else:
-                self.flowDB[srcip][dstip][protocol] = [port,flow,status]
+                self.flowDB[srcip][dstip][protocol] = {}
+                self.flowDB[srcip][dstip][protocol][port] = [flow,status]
+
 
         self.pushflowDB()
 

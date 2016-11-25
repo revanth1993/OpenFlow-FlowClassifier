@@ -323,7 +323,7 @@ def main():
 
     global serversock
     raw_input("nput")
-    #sendFlowtoController(controllerip,'192.168.33.11','192.168.34.11','tcp','8000',['00002ae71d09c049','00004a4ce4fc9448'])
+    sendFlowtoController(controllerip,'192.168.33.11','192.168.34.11','tcp','8000',['00002ae71d09c049','00004a4ce4fc9448'])
     print flowDB
     serversock.send('Kill thread')
     hostdiscoverythread._Thread__stop()         
