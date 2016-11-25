@@ -11,7 +11,7 @@ arp_table = {}
 hosts = []
 serversock=''
 
-controllerip = '199.165.75.160'
+controllerip = '199.165.75.173'
 
 def tcpconnect(controllerip):
     global serversock
@@ -167,7 +167,7 @@ def build_flowDB(srcip,dstip,port,tcp_udp,switches):
         flowDB[srcip][dstip]['arp'] = [flow,'install']
         flowDB[srcip][dstip][tcp_udp] = {}
         flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
-        return 1;
+        return 1
 
     else:
 
@@ -180,7 +180,7 @@ def build_flowDB(srcip,dstip,port,tcp_udp,switches):
             flowDB[srcip][dstip]['arp'] = [flow,'install']
             flowDB[srcip][dstip][tcp_udp] = {}
             flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
-            return 1;
+            return 1
         else:
 
 #       source ip present and destination ip present
@@ -189,31 +189,26 @@ def build_flowDB(srcip,dstip,port,tcp_udp,switches):
 #	  3) if they exist and marked as installed?? overwrite, tcp connections will happen in the newroute but arp,ping in old route
 
 
-            if tcp_udp not in flowDB[srcip][dstip]:
-#		no definition for tcp_udp overwrite the existing old entries for arp and icmp between those srcip and dst ip
-                
-		if flowDB[srcip][dstip]['arp'][1] == 'dropped':
-		    print "srcip and dstip present arp status dropped"
+            if tcp_udp not in flowDB[srcip][dstip]:#		no definition for tcp_udp overwrite the existing old entries for arp and icmp between those srcip and dst ip
+                if flowDB[srcip][dstip]['arp'][1] == 'dropped':
+                    print "srcip and dstip present arp status dropped"
                     deletearpflow(flowDB[srcip][dstip]['arp'][0],dstip)
                     flow = get_flow(switches,dstip)
                     flowDB[srcip][dstip]['icmp'] = [flow,'install']
                     flowDB[srcip][dstip]['arp'] = [flow,'install']
                     flowDB[srcip][dstip][tcp_udp] = {}
                     flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
-                    return 1;
+                    return 1
                 else:
-		    print "srcip and dstip present arp status not dropped overwriting old entries"
+                    print "srcip and dstip present arp status not dropped overwriting old entries"
                     flow = get_flow(switches,dstip)
                     flowDB[srcip][dstip]['icmp'] = [flow,'install']
                     flowDB[srcip][dstip]['arp'] = [flow,'install']
                     flowDB[srcip][dstip][tcp_udp] = {}
                     flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
-                    return 1;
+                    return 1
             else:
-		print "srcip and dstip present tcpudp entry found looking for port numbers"
-#			tcp_udp entry already present look for the port numbers
-#			if port exists and status dropped?  delete flow entries and add new flow set status to install
-#                       if port exists and status installed? ignore user has to delete the old entry before adding for same port
+                print "srcip and dstip present tcpudp entry found looking for port numbers"
                 if port in flowDB[srcip][dstip][tcp_udp] and flowDB[srcip][dstip][tcp_udp][port][1] == 'dropped':
                     print "srcip and dstip present tcpudp entry found port found and marked as dropped deleting the flows"
                     deletetcpudpflow(flowDB[srcip][dstip][tcp_udp][port][0],srcip,dstip,tcp_udp,port)
@@ -222,8 +217,8 @@ def build_flowDB(srcip,dstip,port,tcp_udp,switches):
                     flowDB[srcip][dstip]['arp'] = [flow,'install']
                     flowDB[srcip][dstip][tcp_udp] = {}
                     flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
-                    return 1;
-                    
+                    return 1
+
 def sendFlowtoController(controller_ip,srcip,dstip,tcp_udp,portno,switches):
     global serversock
 
@@ -324,8 +319,8 @@ def main():
 
     global serversock
     raw_input("nput")
-    sendFlowtoController(controllerip,'192.168.22.11','192.168.23.11','tcp','8000',['0000b29fed00b34e','000042ef4042ec44'])
-    
+    sendFlowtoController(controllerip,'192.168.33.11','192.168.34.11','tcp','8000',['00002ae71d09c049','00004a4ce4fc9448'])
+    print flowDB
     serversock.send('Kill thread')
     hostdiscoverythread._Thread__stop()         
 
