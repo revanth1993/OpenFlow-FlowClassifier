@@ -84,13 +84,11 @@ class flowClassifier(app_manager.RyuApp):
         if str(srcip) in self.flowDB:
 
             if str(dstip) in self.flowDB[srcip]:
-                i=False
-
-                if 'dropped' or 'installed' in flowDB[srcip][dstip]["arp"]:
+                if 'dropped' or 'installed' in self.flowDB[srcip][dstip]["arp"]:
                     print "decision already taken wrt this arp packet"
                     return port
                 for switches in self.flowDB[srcip][dstip]["arp"][0]:
-                    if i:
+                    if s!=switches[0]:
                         switch = switches[0]
                         hexdpid = '0x'+switch[4:]
                         out_port = switches[1]
@@ -101,24 +99,9 @@ class flowClassifier(app_manager.RyuApp):
                             print "successfully installed arp flow in the switch"
                         else:
                             print "failed installing arp flow mod"
-                    i = True;
+
                     if s == switches[0]:
                         port = switches[1]
-            else:
-#		destination ip not found
-                print "no such dstip entry found updating db status to dropped"
-                self.flowDB[str(srcip)][str(dstip)] = {}
-                self.flowDB[str(srcip)][str(dstip)]['arp'] = [[s],'dropped']
-                print self.flowDB
-                return port
-
-        else:
-            print "no such entry found updating db status to dropped"
-            self.flowDB[str(srcip)] = {}
-            self.flowDB[str(srcip)][str(dstip)] = {}
-            self.flowDB[str(srcip)][str(dstip)]['arp'] = [[s],'dropped']
-            print self.flowDB
-            return port
         return port
 
     def get_icmp_outport(self,s,dstip,srcip):
@@ -379,6 +362,7 @@ class flowClassifier(app_manager.RyuApp):
     def pushflowDB(self):
         if self.connection:
             print "sending flowDB"
+            print self.flowDB
             self.connection.send("#"+str(self.flowDB))
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)

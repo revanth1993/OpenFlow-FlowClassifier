@@ -38,18 +38,22 @@ def hostDiscovery():
     global serversock
     print serversock
     global flowDB
-    global arptable
+    global arp_table
     while(1):
         try:
             data = serversock.recv(4096)
             
             if '%' in data:
-                flowDB,arptable = map(ast.literal_eval,data.split('%'))
+                flowDB,arp_table = map(ast.literal_eval,data.split('%'))
                 print "first update flowdb and arptable"
+                print flowDB
+                print arp_table
                 continue
             if '#' in data:
                 print "updating flow DB " 
                 flowDB = ast.literal_eval(data.split('#')[1])
+                print flowDB
+                continue
             switch,host,port = data.split(',')
             print "Received Host ARP"
             print "--------------------------------------------------------"
@@ -319,7 +323,7 @@ def main():
 
     global serversock
     raw_input("nput")
-    sendFlowtoController(controllerip,'192.168.33.11','192.168.34.11','tcp','8000',['00002ae71d09c049','00004a4ce4fc9448'])
+    #sendFlowtoController(controllerip,'192.168.33.11','192.168.34.11','tcp','8000',['00002ae71d09c049','00004a4ce4fc9448'])
     print flowDB
     serversock.send('Kill thread')
     hostdiscoverythread._Thread__stop()         
