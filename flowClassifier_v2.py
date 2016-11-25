@@ -345,6 +345,41 @@ class flowClassifier(app_manager.RyuApp):
 
         return oport,tcpport,sd
 
+    def updateflowDBsend(self,srcip,dstip,protocol,port,flow,status):
+        if srcip in self.flowDB:
+            if dstip in self.flowDB[srcip]:
+                if protocol in self.flowDB[srcip][dstip]:
+                    if protocol == 'arp':
+                        self.flowDB[srcip][dstip]['arp'] = [flow,status]
+                    if protocol == 'icmp':
+                        self.flowDB[srcip][dstip]['icmp'] = [flow,status]
+                    else:
+                        self.flowDB[srcip][dstip][protocol] = [port,flow,status]
+            else:
+                self.flowDB[srcip][dstip]={}
+                if protocol == 'arp':
+                    self.flowDB[srcip][dstip]['arp'] = [flow,status]
+                if protocol == 'icmp':
+                    self.flowDB[srcip][dstip]['icmp'] = [flow,status]
+                else:
+                    self.flowDB[srcip][dstip][protocol] = [port,flow,status]
+
+        else:
+            self.flowDB[srcip]={}
+            self.flowDB[srcip][dstip]={}
+            if protocol == 'arp':
+                self.flowDB[srcip][dstip]['arp'] = [flow,status]
+            if protocol == 'icmp':
+                self.flowDB[srcip][dstip]['icmp'] = [flow,status]
+            else:
+                self.flowDB[srcip][dstip][protocol] = [port,flow,status]
+
+        self.pushflowDB()
+
+    def pushflowDB(self):
+        if self.connection:
+            print "sending flowDB"
+            self.connection.send("#"+str(self.flowDB))
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
 
@@ -394,6 +429,9 @@ class flowClassifier(app_manager.RyuApp):
                 print 'http://localhost:8080/stats/flowentry/add,data={"dpid": '+dpid+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0806,"nw_dst":"'+str(arp_pkt.dst_ip)+'"},"actions":[]}'
                 if r.status_code == requests.codes.ok:
                     print "successfully installed arp flow in the switch"
+                    print "updating flowDB"
+                    self.updateflowDBsend(arp_pkt.src_ip,arp_pkt.dst_ip,'arp','',[],'dropped')
+
                 else:
                     print "failed installing arp flow mod"
                 if self.connection:
