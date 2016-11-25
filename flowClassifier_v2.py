@@ -337,47 +337,51 @@ class flowClassifier(app_manager.RyuApp):
             if dstip in self.flowDB[srcip]:
                 if protocol in self.flowDB[srcip][dstip]:
                     if protocol == 'arp':
-                        print "no icmp entry!! dropping"
-                        self.flowDB[srcip][dstip]["arp"]={}
-                        self.flowDB[srcip][dstip]["arp"]['default'] = [flow,status]
+                        print "no arp entry!! dropping"
+                        self.flowDB[srcip][dstip]['arp']={}
+                        self.flowDB[srcip][dstip]['arp']['default'] = [flow,status]
 
                     if protocol == 'icmp':
-                        self.flowDB[srcip][dstip]["icmp"]={}
-                        self.flowDB[srcip][dstip]["icmp"]['default'] = [flow,status]
+                        print "no icmp entry!! dropping"
+                        self.flowDB[srcip][dstip]['icmp']={}
+                        self.flowDB[srcip][dstip]['icmp']['default'] = [flow,status]
 
                     else:
                         self.flowDB[srcip][dstip][protocol] = {}
                         self.flowDB[srcip][dstip][protocol][port] = [flow,status]
 
             else:
+                print "no dstip entry!! dropping"
                 self.flowDB[srcip][dstip]={}
                 if protocol == 'arp':
-                    self.flowDB[srcip][dstip]["arp"]={}
-                    self.flowDB[srcip][dstip]["arp"]['default'] = [flow,status]
+                    self.flowDB[srcip][dstip]['arp']={}
+                    self.flowDB[srcip][dstip]['arp']['default'] = [flow,status]
 
                 if protocol == 'icmp':
-                    self.flowDB[srcip][dstip]["icmp"]={}
-                    self.flowDB[srcip][dstip]["icmp"]['default'] = [flow,status]
+                    self.flowDB[srcip][dstip]['icmp']={}
+                    self.flowDB[srcip][dstip]['icmp']['default'] = [flow,status]
 
                 else:
                     self.flowDB[srcip][dstip][protocol] = {}
                     self.flowDB[srcip][dstip][protocol][port] = [flow,status]
 
         else:
+            print "no srcip entry!! dropping"
             self.flowDB[srcip]={}
             self.flowDB[srcip][dstip]={}
             if protocol == 'arp':
-                self.flowDB[srcip][dstip]["arp"]={}
-                self.flowDB[srcip][dstip]["arp"]['default'] = [flow,status]
+                print "no arp entry!! dropping"
+                self.flowDB[srcip][dstip]['arp']={}
+                self.flowDB[srcip][dstip]['arp']['default'] = [flow,status]
 
             if protocol == 'icmp':
-                self.flowDB[srcip][dstip]["icmp"]={}
-                self.flowDB[srcip][dstip]["icmp"]['default'] = [flow,status]
+                self.flowDB[srcip][dstip]['icmp']={}
+                self.flowDB[srcip][dstip]['icmp']['default'] = [flow,status]
             else:
                 self.flowDB[srcip][dstip][protocol] = {}
                 self.flowDB[srcip][dstip][protocol][port] = [flow,status]
 
-
+        print self.flowDB
         self.pushflowDB()
 
     def pushflowDB(self):
