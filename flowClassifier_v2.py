@@ -341,7 +341,7 @@ class flowClassifier(app_manager.RyuApp):
                         self.flowDB[srcip][dstip]['arp']={}
                         self.flowDB[srcip][dstip]['arp']['default'] = [flow,status]
 
-                    if protocol == 'icmp':
+                    elif protocol == 'icmp':
                         print "no icmp entry!! dropping"
                         self.flowDB[srcip][dstip]['icmp']={}
                         self.flowDB[srcip][dstip]['icmp']['default'] = [flow,status]
@@ -357,7 +357,7 @@ class flowClassifier(app_manager.RyuApp):
                     self.flowDB[srcip][dstip]['arp']={}
                     self.flowDB[srcip][dstip]['arp']['default'] = [flow,status]
 
-                if protocol == 'icmp':
+                elif protocol == 'icmp':
                     self.flowDB[srcip][dstip]['icmp']={}
                     self.flowDB[srcip][dstip]['icmp']['default'] = [flow,status]
 
@@ -373,8 +373,8 @@ class flowClassifier(app_manager.RyuApp):
                 print "no arp entry!! dropping"
                 self.flowDB[srcip][dstip]['arp']={}
                 self.flowDB[srcip][dstip]['arp']['default'] = [flow,status]
-
-            if protocol == 'icmp':
+                print self.flowDB[srcip][dstip]['arp']
+            elif protocol == 'icmp':
                 self.flowDB[srcip][dstip]['icmp']={}
                 self.flowDB[srcip][dstip]['icmp']['default'] = [flow,status]
             else:
