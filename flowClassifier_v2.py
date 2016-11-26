@@ -103,6 +103,7 @@ class flowClassifier(app_manager.RyuApp):
                         else:
                             print "failed installing arp flow mod"
                         self.flowDB[srcip][dstip]['arp']['default'][1] = 'installed'
+                        self.pushflowDB()
                     if s == switches[0]:
                         port = switches[1]
         return port
@@ -129,11 +130,13 @@ class flowClassifier(app_manager.RyuApp):
                         print 'http://localhost:8080/stats/flowentry/add,data={"dpid": '+switch+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0806,"nw_dst":"'+str(dstip)+'","ip_proto":1},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
                         if r.status_code == requests.codes.ok:
                             print "successfully installed icmp flow in the switch"
+                            self.flowDB[srcip][dstip]['icmp']['default'][1] = 'installed'
+                            self.pushflowDB()
                         else:
                             print "failed installing icmp flow mod"
                     if s == switches[0]:
                         port = switches[1]
-                    self.flowDB[srcip][dstip]['icmp']['default'][1] = 'installed'
+
         return port
 
     def get_tcp_outport(self,s,dstip,srcip,dstport,srcport):
@@ -171,6 +174,8 @@ class flowClassifier(app_manager.RyuApp):
                             r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid": '+str(hexdpid)+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":6,"tcp_dst":"'+str(dstport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
                             if r.status_code == requests.codes.ok:
                                 print "successfully installed tcp flow in the switch"
+                                self.flowDB[srcip][dstip]['tcp_dst'][str(dstport)][1] = 'installed'
+                                self.pushflowDB()
                             else:
                                 print "failed installing flow mod"
                             print "tcp flow mod for switch"
@@ -179,7 +184,6 @@ class flowClassifier(app_manager.RyuApp):
                             oport = switches[1]
                             tcpport = str(dstport)
                             sd = 'dst'
-                        self.flowDB[srcip][dstip]['tcp_dst'][str(dstport)][1] = 'installed'
 
 
 
