@@ -52,7 +52,9 @@ def hostDiscovery():
             if '#' in data:
                 print "updating flow DB " 
                 flowDB = ast.literal_eval(data.split('#')[1])
+                print "--------------------------------------------------------"
                 print flowDB
+                print "--------------------------------------------------------"
                 continue
             switch,host,port = data.split(',')
             print "Received Host ARP"
