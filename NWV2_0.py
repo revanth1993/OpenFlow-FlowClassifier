@@ -11,7 +11,7 @@ arp_table = {}
 hosts = []
 serversock=''
 
-controllerip = '199.165.75.173'
+controllerip = '199.165.75.182'
 
 def tcpconnect(controllerip):
     global serversock
@@ -108,7 +108,10 @@ def build_link_stats(controller_ip):
         print key,value
 
 def get_flow(switchlist,dstip):
-    flow=[]    
+    flow=[]
+    if len(switchlist) > len(arp_table):
+        print "cannot construct a flow"
+        return flow
     global links_stats
     for switch in switchlist:
         if switch not in links_stats:
@@ -269,15 +272,7 @@ def sendFlowtoController(controller_ip,srcip,dstip,tcp_udp,portno,switches):
     else:
         print "flow construction failed because of the improper list of switches"
 
-def deletearpflow(controllerip,dpid,dstip,out_port):
 
-    r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid": '+str('0x'+dpid[3:])+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x806,"nw_dst":"'+str(dstip)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
-    print "removing flow"
-    print 'http://'+controllerip+':8080/stats/flowentry/deletedata={"dpid": '+str('0x'+dpid[3:])+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x806,"nw_dst":"'+str(dstip)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
-    if r.status_code == requests.codes.ok:
-        print "successfully removed flow in the switch"
-    else:
-        print "failed removing flow"
 
 def deletetcpdstflow(controllerip,dpid,dstip,tcpport,out_port):
 
@@ -345,17 +340,8 @@ def main():
     hostdiscoverythread.start()
 
     global serversock
-    raw_input("nput")
-    sendFlowtoController(controllerip,'192.168.33.11','192.168.34.11','tcp','8000',['00002ae71d09c049','00004a4ce4fc9448'])
-    print flowDB
-    serversock.send('Kill thread')
-    hostdiscoverythread._Thread__stop()         
 
-    for sip,value in flowDB.iteritems():
-        for dip,t in value.iteritems():
-            print sip,dip,t
-
-'''
+    userinput = 'd'
     print "Enter (1) for insert flows, (2) for view flowDB, (3) delete flows, (4) view topology, (c) to exit"
     while (userinput != 'c'):
         if userinput == '1':
@@ -383,7 +369,11 @@ def main():
             serversock.send("random")
         print "Enter (1) for insert flows, (2) for view flowDB, (3) delete flows, (4) view topology, (c) to exit"
         userinput = raw_input()
-'''
+
+
+    serversock.send('Kill thread')
+    hostdiscoverythread._Thread__stop()
+
 if __name__ == '__main__':
     main()
 

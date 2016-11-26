@@ -82,7 +82,7 @@ class flowClassifier(app_manager.RyuApp):
         print "got a arp packet for switch %s, srcip %s, dstip %s"%(s,srcip,dstip)
         port = ''
         if str(srcip) in self.flowDB:
-
+            print self.flowDB
             if str(dstip) in self.flowDB[srcip]:
                 if 'dropped' or 'installed' in self.flowDB[srcip][dstip]["arp"]['default']:
                     print "decision already taken wrt this arp packet"
