@@ -177,7 +177,7 @@ class flowClassifier(app_manager.RyuApp):
                             oport = switches[1]
                             tcpport = str(dstport)
                             sd = 'dst'
-                        self.flowDB[srcip][dstip]['tcp_dst'][str(srcport)][1] == 'installed'
+                        self.flowDB[srcip][dstip]['tcp_dst'][str(dstport)][1] == 'installed'
 
 
 
