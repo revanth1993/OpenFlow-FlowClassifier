@@ -84,7 +84,7 @@ class flowClassifier(app_manager.RyuApp):
         if str(srcip) in self.flowDB:
             print self.flowDB
             if str(dstip) in self.flowDB[srcip]:
-                if 'dropped' or 'installed' in self.flowDB[srcip][dstip]["arp"]['default']:
+                if self.flowDB[srcip][dstip]['arp']['default'][1] == 'dropped' or self.flowDB[srcip][dstip]['arp']['default'][1] == 'installed':
                     print "decision already taken wrt this arp packet"
                     return 'i'
                 for switches in self.flowDB[srcip][dstip]["arp"]['default'][0]:
