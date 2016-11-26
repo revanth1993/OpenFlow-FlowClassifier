@@ -472,9 +472,9 @@ class flowClassifier(app_manager.RyuApp):
                                       in_port=in_port, actions=actions, data=data)
                 datapath.send_msg(out)
 
-                r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid":"'+str(hexdpid)+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x800,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":1},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
+                r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid":"'+str(hexdpid)+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x806,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":1},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
                 print "installing flow mod for ip packet"
-                print 'http://localhost:8080/stats/flowentry/add,data={"dpid":"'+dpid+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x800,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":1},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
+                print 'http://localhost:8080/stats/flowentry/add,data={"dpid":"'+dpid+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x806,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":1},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
                 if r.status_code == requests.codes.ok:
                     print "successfully installed ip flow in the switch"
                 else:

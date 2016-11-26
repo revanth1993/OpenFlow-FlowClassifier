@@ -150,7 +150,7 @@ def deleteicmpflow(flow,dstip):
     for dpid in flow:
         r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x800,"nw_dst":"'+str(dstip)+'","ip_proto":1},"actions":[]}')
         print "removing icmp flow"
-        print 'http://'+controllerip+':8080/stats/flowentry/delete data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x806,"nw_dst":"'+str(dstip)+'","ip_proto":1},"actions":[]}'
+        print 'http://'+controllerip+':8080/stats/flowentry/delete data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x800,"nw_dst":"'+str(dstip)+'","ip_proto":1},"actions":[]}'
         if r.status_code == requests.codes.ok:
             print "successfully removed icmp flow in the switch"
         else:
