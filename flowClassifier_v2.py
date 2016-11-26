@@ -102,6 +102,7 @@ class flowClassifier(app_manager.RyuApp):
                             print "successfully installed arp flow in the switch"
                         else:
                             print "failed installing arp flow mod"
+                        self.flowDB[srcip][dstip]['arp']['default'][1] = 'installed'
                     if s == switches[0]:
                         port = switches[1]
         return port
@@ -132,6 +133,7 @@ class flowClassifier(app_manager.RyuApp):
                             print "failed installing icmp flow mod"
                     if s == switches[0]:
                         port = switches[1]
+                    self.flowDB[srcip][dstip]['icmp']['default'][1] = 'installed'
         return port
 
     def get_tcp_outport(self,s,dstip,srcip,dstport,srcport):
@@ -177,7 +179,7 @@ class flowClassifier(app_manager.RyuApp):
                             oport = switches[1]
                             tcpport = str(dstport)
                             sd = 'dst'
-                        self.flowDB[srcip][dstip]['tcp_dst'][str(dstport)][1] == 'installed'
+                        self.flowDB[srcip][dstip]['tcp_dst'][str(dstport)][1] = 'installed'
 
 
 
@@ -203,7 +205,8 @@ class flowClassifier(app_manager.RyuApp):
                             oport = switches[1]
                             tcpport = str(srcport)
                             sd = 'src'
-                        self.flowDB[srcip][dstip]['tcp_src'][str(srcport)][1] == 'installed'
+                        self.flowDB[srcip][dstip]['tcp_src'][str(srcport)][1] = 'installed'
+                        self.pushflowDB()
 
         return oport,tcpport,sd
 
@@ -250,7 +253,8 @@ class flowClassifier(app_manager.RyuApp):
                             oport = switches[1]
                             tcpport = str(dstport)
                             sd = 'dst'
-                        self.flowDB[srcip][dstip]['udp_dst'][str(srcport)][1] == 'installed'
+                        self.flowDB[srcip][dstip]['udp_dst'][str(srcport)][1] = 'installed'
+                        self.pushflowDB()
 
 
 
@@ -276,7 +280,8 @@ class flowClassifier(app_manager.RyuApp):
                             oport = switches[1]
                             tcpport = str(dstport)
                             sd = 'src'
-                        self.flowDB[srcip][dstip]['udp_src'][str(srcport)][1] == 'installed'
+                        self.flowDB[srcip][dstip]['udp_src'][str(srcport)][1] = 'installed'
+                        self.pushflowDB()
 
         return oport,tcpport,sd
 
