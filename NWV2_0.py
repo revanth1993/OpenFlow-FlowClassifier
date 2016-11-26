@@ -321,64 +321,79 @@ def sendFlowtoController(controller_ip,srcip,dstip,tcp_udp,portno,switches):
 
 
 
-def deletetcpdstflow(controllerip,dpid,dstip,tcpport,out_port):
+def deletetcpudpsrcflow(controllerip,dpid,dstip,tcpudp,tcpport,out_port):
 
-    r = requests.post('http://'+controllerip+'8080/stats/flowentry/add',data='{"dpid": '+str('0x'+dpid[3:])+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":6,"tcp_dst":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
+    if tcpudp == 'tcp':
+        ip_proto = 6
+    else:
+        ip_proto = 17
+
+    r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":'+ip_proto+',"'+tcpudp+'src":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
     print "tcp flow mod for switch"
-    print 'http://'+controllerip+':8080/stats/flowentry/add,data={"dpid": '+str('0x'+dpid[3:])+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":6,"tcp_dst":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
+    print 'http://'+controllerip+':8080/stats/flowentry/delete,data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":'+ip_proto+','+tcpudp+'src":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
     if r.status_code == requests.codes.ok:
         print "successfully removed tcp flow in the switch"
     else:
         print "failed removing flow "
 
-def deletetcpsrcflow(controllerip,dpid,dstip,tcpport,out_port):
+def deletetcpudpdstflow(controllerip,dpid,dstip,tcpudp,tcpport,out_port):
 
-    r = requests.post('http://'+controllerip+':8080/stats/flowentry/add',data='{"dpid": '+str('0x'+dpid[3:])+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":6,"tcp_src":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
+    if tcpudp == 'tcp':
+        ip_proto = 6
+    else:
+        ip_proto = 17
+
+    r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":'+ip_proto+',"'+tcpudp+'dst":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
     print "tcp flow mod for switch"
-    print 'http://'+controllerip+':8080/stats/flowentry/add,data={"dpid": '+str('0x'+dpid[3:])+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":6,"tcp_src":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
+    print 'http://'+controllerip+':8080/stats/flowentry/delete,data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":'+ip_proto+','+tcpudp+'dst":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
     if r.status_code == requests.codes.ok:
         print "successfully removed tcp flow in the switch"
     else:
         print "failed removing flow "
 
-def deleteflow(controllerip,srcip,dstip,switches,port):
+def deleteflow(controllerip,srcip,dstip,switches,tcpudp,port):
     
     global flowDB
     global serversock
 
     if srcip in flowDB:
         if dstip in flowDB[srcip]:
-            for protocols in flowDB[srcip][dstip]:
-                print "sending delete flow request to the controller"
-                if protocols == port:
-                    for switch in flowDB[srcip][dstip][protocols]:
-                        deletetcpdstflow(controllerip,switch[0],dstip,switch[1],port)
-            print "Emptying up the Flow DB for srcip %s dstip %s and sending to the controller" %(srcip,dstip)
-            flowDB[srcip][dstip]={}
-            try:
-                serversock.send(str(flowDB))
-                print "Sent the updated flow DB"
-            except:
-                print "Failed to send the flowDB"
-                        
+            if tcpudp in flowDB[srcip][dstip]:
+                for protocols in flowDB[srcip][dstip][tcpudp]:
+                    print "sending delete flow request to the controller"
+                    if protocols == port:
+                        for switch in flowDB[srcip][dstip][tcpudp][protocols][0]:
+                            deletetcpudpdstflow(controllerip, switch[0], dstip, tcpudp, port, switch[1])
+                print "Emptying up the Flow DB for srcip %s dstip %s and sending to the controller" %(srcip,dstip)
+                flowDB[srcip][dstip][tcpudp][port]=[]
+                try:
+                    serversock.send(str(flowDB))
+                    print "Sent the updated flow DB"
+                    return
+                except:
+                    print "Failed to send the flowDB"
+
 
     switches.reverse()
     if dstip in flowDB:
         if srcip in flowDB[dstip]:
-            for protocols in flowDB[dstip][srcip]:
-                if protocols == port:
-                    for switch in flowDB[dstip][srcip][port]:
-                        deletetcpsrcflow(controllerip,switch[0],srcip,switch[1],port)
+            if tcpudp in flowDB[dstip][srcip]:
+                for protocols in flowDB[dstip][srcip][tcpudp]:
+                    if protocols == port:
+                        for switch in flowDB[dstip][srcip][tcpudp][protocols][0]:
+                            deletetcpudpsrcflow(controllerip, switch[0], srcip, switch[0], tcpudp, port, switch[1])
 
             
-        print "Emptying up the Flow DB for dstip %s srcip %s and sending to the controller" %(dstip,srcip)
-        flowDB[dstip][srcip]={}
-        try:
-            serversock.send(str(flowDB))
-            print "Sent the updated flow DB"
-        except:
-            print "Failed to send the flowDB"
-    switches.reverse()                        
+                print "Emptying up the Flow DB for dstip %s srcip %s and sending to the controller" %(dstip,srcip)
+                flowDB[dstip][srcip][tcpudp][port]=[]
+                try:
+                    serversock.send(str(flowDB))
+                    print "Sent the updated flow DB"
+                    return
+                except:
+                    print "Failed to send the flowDB"
+    switches.reverse()
+
 
 
 def main():
