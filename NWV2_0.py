@@ -324,9 +324,9 @@ def sendFlowtoController(controller_ip,srcip,dstip,tcp_udp,portno,switches):
 def deletetcpudpsrcflow(controllerip,dpid,dstip,tcpudp,tcpport,out_port):
 
     if tcpudp == 'tcp':
-        ip_proto = 6
+        ip_proto = '6'
     else:
-        ip_proto = 17
+        ip_proto = '17'
 
     r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":'+ip_proto+',"'+tcpudp+'_src":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
     print "tcp flow mod for switch"
