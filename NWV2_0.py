@@ -359,13 +359,13 @@ def deleteflow(controllerip,srcip,dstip,switches,tcpudp,port):
     if srcip in flowDB:
         if dstip in flowDB[srcip]:
             if tcpudp+'_dst' in flowDB[srcip][dstip]:
-                for protocols in flowDB[srcip][dstip][tcpudp]:
+                for protocols in flowDB[srcip][dstip][tcpudp+'_dst']:
                     print "sending delete flow request to the controller"
                     if protocols == port:
-                        for switch in flowDB[srcip][dstip][tcpudp][protocols][0]:
+                        for switch in flowDB[srcip][dstip][tcpudp+'_dst'][protocols][0]:
                             deletetcpudpdstflow(controllerip, switch[0], dstip, tcpudp, port, switch[1])
                 print "Emptying up the Flow DB for srcip %s dstip %s and sending to the controller" %(srcip,dstip)
-                flowDB[srcip][dstip][tcpudp][port]=[]
+                flowDB[srcip][dstip][tcpudp+'_dst'][port]=[]
                 try:
                     serversock.send(str(flowDB))
                     print "Sent the updated flow DB"
@@ -378,14 +378,14 @@ def deleteflow(controllerip,srcip,dstip,switches,tcpudp,port):
     if dstip in flowDB:
         if srcip in flowDB[dstip]:
             if tcpudp+'_src' in flowDB[dstip][srcip]:
-                for protocols in flowDB[dstip][srcip][tcpudp]:
+                for protocols in flowDB[dstip][srcip][tcpudp+'_src']:
                     if protocols == port:
-                        for switch in flowDB[dstip][srcip][tcpudp][protocols][0]:
+                        for switch in flowDB[dstip][srcip][tcpudp+'_src'][protocols][0]:
                             deletetcpudpsrcflow(controllerip, switch[0], srcip, tcpudp, port, switch[1])
 
             
                 print "Emptying up the Flow DB for dstip %s srcip %s and sending to the controller" %(dstip,srcip)
-                flowDB[dstip][srcip][tcpudp][port]=[]
+                flowDB[dstip][srcip][tcpudp+'_src'][port]=[]
                 try:
                     serversock.send(str(flowDB))
                     print "Sent the updated flow DB"
