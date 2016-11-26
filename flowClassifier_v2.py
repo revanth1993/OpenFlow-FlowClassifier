@@ -110,13 +110,7 @@ class flowClassifier(app_manager.RyuApp):
         if str(srcip) in self.flowDB:
 
             if str(dstip) in self.flowDB[srcip]:
-                i=False
-                if 'icmp' not in self.flowDB[srcip][dstip]:
-                    print "no icmp entry!! dropping"
-                    self.flowDB[srcip][dstip]["icmp"] = {}
-                    self.flowDB[srcip][dstip]["icmp"]['default'] = [[s],'dropped']
-                    return port
-                if 'dropped' or 'installed' in self.flowDB[srcip][dstip]["icmp"]['default']:
+                if self.flowDB[srcip][dstip]['icmp']['default'][1] == 'dropped' or self.flowDB[srcip][dstip]['icmp']['default'][1] == 'installed':
                     print "decision already taken wrt this icmp packet"
                     return 'i'
                 for switches in self.flowDB[srcip][dstip]["icmp"]['default'][0]:
@@ -133,24 +127,6 @@ class flowClassifier(app_manager.RyuApp):
                             print "failed installing icmp flow mod"
                     if s == switches[0]:
                         port = switches[1]
-            else:
-#		destination ip not found
-                print "no such dstip entry found updating db status to dropped"
-                self.flowDB[str(srcip)][str(dstip)] = {}
-                self.flowDB[str(srcip)][str(dstip)]['icmp']={}
-                self.flowDB[str(srcip)][str(dstip)]['icmp']['default'] = [[s],'dropped']
-                print self.flowDB
-                return port
-
-        else:
-            print "no such entry found updating db status to dropped"
-            self.flowDB[str(srcip)] = {}
-            self.flowDB[str(srcip)][str(dstip)] = {}
-            self.flowDB[str(srcip)][str(dstip)]['icmp'] = {}
-            self.flowDB[str(srcip)][str(dstip)]['icmp']['default'] = [[s],'dropped']
-            print self.flowDB
-            return port
-
         return port
     def get_tcp_outport(self,s,dstip,srcip,dstport,srcport):
 #	srcip not present or destination not present updated the flow to dropped
@@ -475,6 +451,7 @@ class flowClassifier(app_manager.RyuApp):
             else:
                 print "failed installing arp flow mod"
 
+
         elif ipv4_pkt:
             print "ipv4 packet"
 
@@ -490,9 +467,15 @@ class flowClassifier(app_manager.RyuApp):
                     print 'http://localhost:8080/stats/flowentry/add,data={"dpid": '+dpid+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x800,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":1},"actions":[]}'
                     if r.status_code == requests.codes.ok:
                         print "successfully installed arp flow in the switch"
+                        print "updating icmp drop in database"
+                        self.updateflowDBsend(arp_pkt.src_ip,arp_pkt.dst_ip,'icmp','',[dpid],'dropped')
                     else:
                         print "failed installing arp flow mod"
 
+                    return
+
+                if out_port == 'i':
+                    print "desicion already taken with this icmp return"
                     return
 
                 actions = [parser.OFPActionOutput(int(out_port))]
