@@ -150,7 +150,7 @@ def deleteicmpflow(flow,dstip):
     for dpid in flow:
         r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x800,"nw_dst":"'+str(dstip)+'","ip_proto":1},"actions":[]}')
         print "removing icmp flow"
-        print 'http://'+controllerip+':8080/stats/flowentry/delete data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x800,"nw_dst":"'+str(dstip)+'","ip_proto":1},"actions":[]}'
+        print 'http://'+controllerip+':8080/stats/flowentry/delete data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x806,"nw_dst":"'+str(dstip)+'","ip_proto":1},"actions":[]}'
         if r.status_code == requests.codes.ok:
             print "successfully removed icmp flow in the switch"
         else:
@@ -190,7 +190,7 @@ def build_flowDB(srcip,dstip,port,tcp_udp,switches):
         flowDB[srcip][dstip]['arp']['default'] = [flow,'install']
         flowDB[srcip][dstip][tcp_udp] = {}
         flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
-        return 1
+
 
     else:
 
@@ -205,7 +205,7 @@ def build_flowDB(srcip,dstip,port,tcp_udp,switches):
             flowDB[srcip][dstip]['arp']['default'] = [flow,'install']
             flowDB[srcip][dstip][tcp_udp] = {}
             flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
-            return 1
+
         else:
 
 #       source ip present and destination ip present
@@ -225,17 +225,23 @@ def build_flowDB(srcip,dstip,port,tcp_udp,switches):
                         flowDB[srcip][dstip]['arp']['default'] = [flow,'install']
                         flowDB[srcip][dstip][tcp_udp] = {}
                         flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
-                        return 1
+
                     else:
                         print "srcip and dstip present arp status not dropped overwriting old entries"
                         flow = get_flow(switches,dstip)
-                        flowDB[srcip][dstip]['icmp'] = {}
                         flowDB[srcip][dstip]['arp'] = {}
-                        flowDB[srcip][dstip]['icmp']['default'] = [flow,'install']
                         flowDB[srcip][dstip]['arp']['default'] = [flow,'install']
                         flowDB[srcip][dstip][tcp_udp] = {}
                         flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
-                        return 1
+
+                else:
+                    print "srcip and dstip present arp found"
+                    flow = get_flow(switches,dstip)
+                    flowDB[srcip][dstip]['arp'] = {}
+                    flowDB[srcip][dstip]['arp']['default'] = [flow,'install']
+                    flowDB[srcip][dstip][tcp_udp] = {}
+                    flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
+
 
                 if 'icmp' in flowDB[srcip][dstip]:
                     if flowDB[srcip][dstip]['icmp']['default'][1] == 'dropped':
@@ -246,15 +252,24 @@ def build_flowDB(srcip,dstip,port,tcp_udp,switches):
                         flowDB[srcip][dstip]['icmp']['default'] = [flow,'install']
                         flowDB[srcip][dstip][tcp_udp] = {}
                         flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
-                        return 1
-                elif 'icmp' not in flowDB[srcip][dstip]:
-                    print "srcip and dstip present icmp not found"
+
+                    else:
+                        print "srcip and dstip present icmp status not dropped overwriting old entries"
+                        flow = get_flow(switches,dstip)
+                        flowDB[srcip][dstip]['icmp'] = {}
+                        flowDB[srcip][dstip]['icmp']['default'] = [flow,'install']
+                        flowDB[srcip][dstip][tcp_udp] = {}
+                        flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
+
+
+                else:
+                    print "srcip and dstip present icmp nor arp found"
                     flow = get_flow(switches,dstip)
                     flowDB[srcip][dstip]['icmp'] = {}
                     flowDB[srcip][dstip]['icmp']['default'] = [flow,'install']
                     flowDB[srcip][dstip][tcp_udp] = {}
                     flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
-                    return 1
+
             else:
                 print "srcip and dstip present tcpudp entry found looking for port numbers"
                 if port in flowDB[srcip][dstip][tcp_udp] and flowDB[srcip][dstip][tcp_udp][port][1] == 'dropped':
@@ -267,7 +282,7 @@ def build_flowDB(srcip,dstip,port,tcp_udp,switches):
                     flowDB[srcip][dstip]['arp']['default'] = [flow,'install']
                     flowDB[srcip][dstip][tcp_udp] = {}
                     flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
-                    return 1
+
                 if port in flowDB[srcip][dstip][tcp_udp] and flowDB[srcip][dstip][tcp_udp][port][1] == 'install':
                     print "srcip and dstip present tcpudp entry found port found and marked as install overwriting the flows"
                     flow = get_flow(switches,dstip)
@@ -277,8 +292,8 @@ def build_flowDB(srcip,dstip,port,tcp_udp,switches):
                     flowDB[srcip][dstip]['arp']['default'] = [flow,'install']
                     flowDB[srcip][dstip][tcp_udp] = {}
                     flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
-                    return 1
 
+    return 1
 def sendFlowtoController(controller_ip,srcip,dstip,tcp_udp,portno,switches):
     global serversock
 

@@ -191,7 +191,7 @@ class flowClassifier(app_manager.RyuApp):
                             switch = switches[0]
                             hexdpid = '0x'+switch[4:]
                             out_port = switches[1]
-                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid": '+str(hexdpid)+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":6,"tcp_src":"'+str(srcport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
+                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid": '+str(hexdpid)+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":6,"tcp_src":"'+str(srcport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
                             if r.status_code == requests.codes.ok:
                                 print "successfully installed tcp flow in the switch"
                             else:
