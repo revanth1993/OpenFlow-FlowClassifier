@@ -138,13 +138,23 @@ def pushflowDB():
 
 def deletearpflow(flow,dstip):
     for dpid in flow:
-        r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid": '+str('0x'+dpid[3:])+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x806,"nw_dst":"'+str(dstip)+'"},"actions":[]}')
-        print "removing flow"
-        print 'http://'+controllerip+':8080/stats/flowentry/deletedata={"dpid": '+str('0x'+dpid[3:])+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x806,"nw_dst":"'+str(dstip)+'"},"actions":[]}'
+        r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid": '+str('0x'+dpid[3:])+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x806,"nw_dst":"'+str(dstip)+'"},"actions":[]}')
+        print "removing arp flow"
+        print 'http://'+controllerip+':8080/stats/flowentry/delete data={"dpid": '+str('0x'+dpid[3:])+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x806,"nw_dst":"'+str(dstip)+'"},"actions":[]}'
         if r.status_code == requests.codes.ok:
             print "successfully removed flow in the switch"
         else:
             print "failed removing flow"
+
+def deleteicmpflow(flow,dstip):
+    for dpid in flow:
+        r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid": '+str('0x'+dpid[3:])+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x806,"nw_dst":"'+str(dstip)+'","ip_proto":1},"actions":[]}')
+        print "removing icmp flow"
+        print 'http://'+controllerip+':8080/stats/flowentry/deletedata={"dpid": '+str('0x'+dpid[3:])+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x806,"nw_dst":"'+str(dstip)+'","ip_proto":1},"actions":[]}'
+        if r.status_code == requests.codes.ok:
+            print "successfully removed icmp flow in the switch"
+        else:
+            print "failed removing icmp flow"
 
 def deletetcpudpflow(flow,srcip,dstip,tcpudp,port):
     if 'tcp' in tcpudp:
@@ -197,7 +207,7 @@ def build_flowDB(srcip,dstip,port,tcp_udp,switches):
 #       source ip present and destination ip present
 #         1) look for old arp and icmp entries
 #         2) if they exist and marked as dropped  delete the flow entries in all the switches and then overwrite
-#	  3) if they exist and marked as installed?? overwrite, tcp connections will happen in the newroute but arp,ping in old route
+#	      3) if they exist and marked as installed?? overwrite, tcp connections will happen in the newroute but arp,ping in old route
 
 
             if tcp_udp not in flowDB[srcip][dstip]:#		no definition for tcp_udp overwrite the existing old entries for arp and icmp between those srcip and dst ip
@@ -207,9 +217,7 @@ def build_flowDB(srcip,dstip,port,tcp_udp,switches):
                         print "srcip and dstip present arp status dropped"
                         deletearpflow(flowDB[srcip][dstip]['arp']['default'][0],dstip)
                         flow = get_flow(switches,dstip)
-                        flowDB[srcip][dstip]['icmp'] = {}
                         flowDB[srcip][dstip]['arp'] = {}
-                        flowDB[srcip][dstip]['icmp']['default'] = [flow,'install']
                         flowDB[srcip][dstip]['arp']['default'] = [flow,'install']
                         flowDB[srcip][dstip][tcp_udp] = {}
                         flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
@@ -224,6 +232,18 @@ def build_flowDB(srcip,dstip,port,tcp_udp,switches):
                         flowDB[srcip][dstip][tcp_udp] = {}
                         flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
                         return 1
+
+                if 'icmp' in flowDB[srcip][dstip]:
+                    if flowDB[srcip][dstip]['icmp']['default'][1] == 'dropped':
+                        print "srcip and dstip present icmp status dropped"
+                        deleteicmpflow(flowDB[srcip][dstip]['icmp']['default'][0],dstip)
+                        flow = get_flow(switches,dstip)
+                        flowDB[srcip][dstip]['icmp'] = {}
+                        flowDB[srcip][dstip]['icmp']['default'] = [flow,'install']
+                        flowDB[srcip][dstip][tcp_udp] = {}
+                        flowDB[srcip][dstip][tcp_udp][port] = [flow,'install']
+                        return 1
+
             else:
                 print "srcip and dstip present tcpudp entry found looking for port numbers"
                 if port in flowDB[srcip][dstip][tcp_udp] and flowDB[srcip][dstip][tcp_udp][port][1] == 'dropped':
