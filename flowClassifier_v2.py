@@ -133,6 +133,7 @@ class flowClassifier(app_manager.RyuApp):
                     if s == switches[0]:
                         port = switches[1]
         return port
+
     def get_tcp_outport(self,s,dstip,srcip,dstport,srcport):
 #	srcip not present or destination not present updated the flow to dropped
 #	srcip and destination ip present look for srcport and flow db tcpsrc portno if they match install flows
@@ -148,78 +149,61 @@ class flowClassifier(app_manager.RyuApp):
 
             if str(dstip) in self.flowDB[srcip]:
 
-                if str(dstport) in self.flowDB[srcip][dstip]['tcpdst']:
+                if 'tcp_dst' not in self.flowDB[srcip][dstip] and 'tcp_src' not in self.flowDB[srcip][dstip]:
+                        print "srcip dstip found no entry for tcp_dst will be updated to dropped!!"
+                        return '','',''
 
-                    if self.flowDB[srcip][dstip]['tcpdst'][str(dstport)][1] == 'installed':
+                if 'tcp_dst' in self.flowDB[srcip][dstip] and str(dstport) in self.flowDB[srcip][dstip]['tcp_dst']:
+
+                    if self.flowDB[srcip][dstip]['tcp_dst'][str(dstport)][1] == 'installed' or self.flowDB[srcip][dstip]['tcp_dst'][str(dstport)][1] == 'dropped':
                         print "already installed for this packet"
                         return 'i','i','i'
 
-                    i=False
-                    for switches in self.flowDB[srcip][dstip]['tcpdst'][str(dstport)][0]:
-                        if i:
+                    print "status set to install for tcp dst flow installing "
+                    for switches in self.flowDB[srcip][dstip]['tcp_dst'][str(dstport)][0]:
+
+                        if switches[0]!=s:
                             switch = switches[0]
                             hexdpid = '0x'+switch[4:]
                             out_port = switches[1]
-                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid": '+str(hexdpid)+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":6,"tcp_dst":"'+str(dstport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
+                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid": '+str(hexdpid)+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":6,"tcp_dst":"'+str(dstport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
                             if r.status_code == requests.codes.ok:
                                 print "successfully installed tcp flow in the switch"
                             else:
                                 print "failed installing flow mod"
                             print "tcp flow mod for switch"
-                            print 'http://localhost:8080/stats/flowentry/add,data={"dpid": '+switch+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":6,"tcp_dst":"'+str(dstport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
-                        i = True;
+                            print 'http://localhost:8080/stats/flowentry/add,data={"dpid": '+switch+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":6,"tcp_dst":"'+str(dstport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
                         if s == switches[0]:
                             oport = switches[1]
                             tcpport = str(dstport)
                             sd = 'dst'
-                        self.flowDB[srcip][dstip]['tcpdst'][str(srcport)][1] == 'installed'
+                        self.flowDB[srcip][dstip]['tcp_dst'][str(srcport)][1] == 'installed'
 
 
 
-                if str(srcport) in self.flowDB[srcip][dstip]['tcpsrc']:
-                    i=False
-                    if self.flowDB[srcip][dstip]['tcpsrc'][str(srcport)][1] == 'installed':
+                if 'tcp_src' in self.flowDB[srcip][dstip] and str(srcport) in self.flowDB[srcip][dstip]['tcp_src']:
+                    if self.flowDB[srcip][dstip]['tcp_src'][str(srcport)][1] == 'installed' or self.flowDB[srcip][dstip]['tcp_src'][str(srcport)][1] == 'dropped':
                         print "already installed for this packet"
                         return 'i','i','i'
-                    for switches in self.flowDB[srcip][dstip]['tcpsrc'][str(srcport)][0]:
-                        if i:
+                    for switches in self.flowDB[srcip][dstip]['tcp_src'][str(srcport)][0]:
+                        print "status set to install for tcp src flow installing "
+                        if s!=switches[0]:
                             switch = switches[0]
                             hexdpid = '0x'+switch[4:]
                             out_port = switches[1]
-                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid": '+str(hexdpid)+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":6,"tcp_src":"'+str(srcport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
+                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid": '+str(hexdpid)+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":6,"tcp_src":"'+str(srcport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
                             if r.status_code == requests.codes.ok:
                                 print "successfully installed tcp flow in the switch"
                             else:
                                 print "failed installing flow mod"
                             print "tcp flow mod for switch"
-                            print 'http://localhost:8080/stats/flowentry/add,data={"dpid": '+switch+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":6,"tcp_src":"'+str(srcport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
-                        i = True;
+                            print 'http://localhost:8080/stats/flowentry/add,data={"dpid": '+switch+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":6,"tcp_src":"'+str(srcport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
+
                         if s == switches[0]:
                             oport = switches[1]
                             tcpport = str(dstport)
                             sd = 'src'
-                        self.flowDB[srcip][dstip]['tcpsrc'][str(srcport)][1] == 'installed'
-                else:
-                    print "no entry for srcport or dst port make an entry and marking dropped"
-                    self.flowDB[srcip][dstip]['tcpsrc'][str(srcport)][1] == 'dropped'
-                    self.flowDB[srcip][dstip]['tcpsrc'][str(srcport)][0] == [s]
-                    return '','',''
-            else:
-#		destination ip not found
-                print "no such dstip entry found updating db status to dropped"
-                self.flowDB[str(srcip)][str(dstip)] = {}
-                self.flowDB[str(srcip)][str(dstip)]['tcpdst'] = [dstport,[s],'dropped']
-                print self.flowDB
-                return oport
-
-        else:
-            print "no such entry found updating db status to dropped"
-            self.flowDB[str(srcip)] = {}
-            self.flowDB[str(srcip)][str(dstip)] = {}
-            self.flowDB[str(srcip)][str(dstip)]['tcpdst'] = [dstport,[s],'dropped']
-            print self.flowDB
-            return oport
-
+                        self.flowDB[srcip][dstip]['tcp_src'][str(srcport)][1] == 'installed'
 
         return oport,tcpport,sd
 
@@ -228,90 +212,74 @@ class flowClassifier(app_manager.RyuApp):
 #	srcip and destination ip present look for srcport and flow db tcpsrc portno if they match install flows
 # 	flowdb tcpdst portno and dstport match  install flows
 #	no match at all for same srcip dstip make an entry for that srcip dstip dstport portno and switch status dropped
-        print "got a udp packet for switch %s, srcip %s, dstip %s"%(s,srcip,dstip)
+        print "got a udp packet installing for switch %s, srcip %s, dstip %s"%(s,srcip,dstip)
         print dstport,srcport
         oport=''
-        udpport=''
+        tcpport=''
         sd=''
         print self.flowDB
         if str(srcip) in self.flowDB:
 
             if str(dstip) in self.flowDB[srcip]:
 
-                if str(dstport) in self.flowDB[srcip][dstip]['udpdst']:
+                if 'udp_dst' not in self.flowDB[srcip][dstip] and 'udp_src' not in self.flowDB[srcip][dstip]:
+                        print "srcip dstip found no entry for udp_dst will be updated to dropped!!"
+                        return '','',''
 
-                    if self.flowDB[srcip][dstip]['udpdst'][str(dstport)][1] == 'installed':
+                if 'udp_dst' in self.flowDB[srcip][dstip] and str(dstport) in self.flowDB[srcip][dstip]['udp_dst']:
+
+                    if self.flowDB[srcip][dstip]['udp_dst'][str(dstport)][1] == 'installed' or self.flowDB[srcip][dstip]['udp_dst'][str(dstport)][1] == 'dropped':
                         print "already installed for this packet"
                         return 'i','i','i'
 
-                    i=False
-                    for switches in self.flowDB[srcip][dstip]['udpdst'][str(dstport)][0]:
-                        if i:
+                    print "status set to install for udp dst flow installing "
+                    for switches in self.flowDB[srcip][dstip]['udp_dst'][str(dstport)][0]:
+
+                        if switches[0]!=s:
                             switch = switches[0]
                             hexdpid = '0x'+switch[4:]
                             out_port = switches[1]
-                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid": '+str(hexdpid)+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":17,"udp_dst":"'+str(dstport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
-                            if r.status_code == requests.codes.ok:
-                                print "successfully installed udp flow in the switch"
-                            else:
-                                print "failed installing flow mod"
-                            print "udp flow mod for switch"
-                            print 'http://localhost:8080/stats/flowentry/add,data={"dpid": '+switch+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":17,"udp_dst":"'+str(dstport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
-                        i = True;
-                        if s == switches[0]:
-                            oport = switches[1]
-                            tcpport = str(dstport)
-                            sd = 'dst'
-                        self.flowDB[srcip][dstip]['tcpdst'][str(srcport)][1] == 'installed'
-
-
-
-                if str(srcport) in self.flowDB[srcip][dstip]['tcpsrc']:
-                    i=False
-                    if self.flowDB[srcip][dstip]['tcpsrc'][str(srcport)][1] == 'installed':
-                        print "already installed for this packet"
-                        return 'i','i','i'
-                    for switches in self.flowDB[srcip][dstip]['tcpsrc'][str(srcport)][0]:
-                        if i:
-                            switch = switches[0]
-                            hexdpid = '0x'+switch[4:]
-                            out_port = switches[1]
-                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid": '+str(hexdpid)+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":6,"tcp_src":"'+str(srcport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
+                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid": '+str(hexdpid)+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":17,"udp_dst":"'+str(dstport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
                             if r.status_code == requests.codes.ok:
                                 print "successfully installed tcp flow in the switch"
                             else:
                                 print "failed installing flow mod"
                             print "tcp flow mod for switch"
-                            print 'http://localhost:8080/stats/flowentry/add,data={"dpid": '+switch+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":6,"tcp_src":"'+str(srcport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
-                        i = True;
+                            print 'http://localhost:8080/stats/flowentry/add,data={"dpid": '+switch+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":17,"udp_dst":"'+str(dstport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
                         if s == switches[0]:
                             oport = switches[1]
                             tcpport = str(dstport)
                             sd = 'dst'
-                        self.flowDB[srcip][dstip]['tcpsrc'][str(srcport)][1] == 'installed'
-                else:
-                    print "no entry for srcport or dst port make an entry and marking dropped"
-                    self.flowDB[srcip][dstip]['tcpsrc'][str(srcport)][1] == 'dropped'
-                    self.flowDB[srcip][dstip]['tcpsrc'][str(srcport)][0] == [s]
-                    return '','',''
-            else:
-#		destination ip not found
-                print "no such dstip entry found updating db status to dropped"
-                self.flowDB[str(srcip)][str(dstip)] = {}
-                self.flowDB[str(srcip)][str(dstip)]['tcpdst'] = [dstport,[s],'dropped']
-                print self.flowDB
-                return oport
+                        self.flowDB[srcip][dstip]['udp_dst'][str(srcport)][1] == 'installed'
 
-        else:
-            print "no such entry found updating db status to dropped"
-            self.flowDB[str(srcip)] = {}
-            self.flowDB[str(srcip)][str(dstip)] = {}
-            self.flowDB[str(srcip)][str(dstip)]['tcpdst'] = [dstport,[s],'dropped']
-            print self.flowDB
-            return oport
 
+
+                if 'udp_src' in self.flowDB[srcip][dstip] and str(srcport) in self.flowDB[srcip][dstip]['udp_src']:
+                    if self.flowDB[srcip][dstip]['udp_src'][str(srcport)][1] == 'installed' or self.flowDB[srcip][dstip]['udp_src'][str(srcport)][1] == 'dropped':
+                        print "already installed for this packet"
+                        return 'i','i','i'
+                    for switches in self.flowDB[srcip][dstip]['udp_src'][str(srcport)][0]:
+                        print "status set to install for udp src flow installing "
+                        if s!=switches[0]:
+                            switch = switches[0]
+                            hexdpid = '0x'+switch[4:]
+                            out_port = switches[1]
+                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid": '+str(hexdpid)+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":17,"udp_src":"'+str(srcport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
+                            if r.status_code == requests.codes.ok:
+                                print "successfully installed tcp flow in the switch"
+                            else:
+                                print "failed installing flow mod"
+                            print "udp flow mod for switch"
+                            print 'http://localhost:8080/stats/flowentry/add,data={"dpid": '+switch+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":17,"udp_src":"'+str(srcport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
+
+                        if s == switches[0]:
+                            oport = switches[1]
+                            tcpport = str(dstport)
+                            sd = 'src'
+                        self.flowDB[srcip][dstip]['udp_src'][str(srcport)][1] == 'installed'
 
         return oport,tcpport,sd
+
 
     def updateflowDBsend(self,srcip,dstip,protocol,port,flow,status):
         if srcip in self.flowDB:
@@ -509,6 +477,7 @@ class flowClassifier(app_manager.RyuApp):
                     r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid": '+str(hexdpid)+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":6,"tcp_dst":"'+str(tcp_pkt.dst_port)+'"},"actions":[]}')
                     if r.status_code == requests.codes.ok:
                         print "successfully installed tcp flow in the switch"
+                        self.updateflowDBsend(ipv4_pkt.src,ipv4_pkt.dst,'tcp_dst',tcp_pkt.dst_port,[dpid],'dropped')
                     else:
                         print "failed installing flow mod"
                     print "tcp flow mod for switch"
@@ -546,12 +515,15 @@ class flowClassifier(app_manager.RyuApp):
                     r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid": '+str(hexdpid)+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":17,"udp_dst":"'+str(udp_pkt.dst_port)+'"},"actions":[]}')
                     if r.status_code == requests.codes.ok:
                         print "successfully installed tcp flow in the switch"
+                        self.updateflowDBsend(ipv4_pkt.src,ipv4_pkt.dst,'udp_dst',udp_pkt.dst_port,[dpid],'dropped')
                     else:
                         print "failed installing flow mod"
                     print "tcp flow mod for switch"
                     print 'http://localhost:8080/stats/flowentry/add,data={"dpid": '+dpid+',"table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":17,"udp_dst":"'+str(udp_pkt.dst_port)+'"},"actions":[]}'
                     return
-
+                if out_port == 'i':
+                    print "already installed"
+                    return
 
                 actions = [parser.OFPActionOutput(int(out_port))]
                 data = None
