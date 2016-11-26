@@ -84,6 +84,9 @@ class flowClassifier(app_manager.RyuApp):
         if str(srcip) in self.flowDB:
             print self.flowDB
             if str(dstip) in self.flowDB[srcip]:
+                if 'arp' not in self.flowDB[srcip][dstip]:
+                    print "srcip dstip found no entry for arp will be updated to dropped!!"
+                    return port
                 if self.flowDB[srcip][dstip]['arp']['default'][1] == 'dropped' or self.flowDB[srcip][dstip]['arp']['default'][1] == 'installed':
                     print "decision already taken wrt this arp packet"
                     return 'i'
@@ -108,8 +111,10 @@ class flowClassifier(app_manager.RyuApp):
         print "got a icmp packet for switch %s, srcip %s, dstip %s"%(s,srcip,dstip)
         port = ''
         if str(srcip) in self.flowDB:
-
             if str(dstip) in self.flowDB[srcip]:
+                if 'icmp' not in self.flowDB[srcip][dstip]:
+                    print "srcip dstip found no entry for icmp will be updated to dropped!!"
+                    return port
                 if self.flowDB[srcip][dstip]['icmp']['default'][1] == 'dropped' or self.flowDB[srcip][dstip]['icmp']['default'][1] == 'installed':
                     print "decision already taken wrt this icmp packet"
                     return 'i'
