@@ -468,7 +468,7 @@ class flowClassifier(app_manager.RyuApp):
                     if r.status_code == requests.codes.ok:
                         print "successfully installed arp flow in the switch"
                         print "updating icmp drop in database"
-                        self.updateflowDBsend(arp_pkt.src_ip,arp_pkt.dst_ip,'icmp','',[dpid],'dropped')
+                        self.updateflowDBsend(ipv4_pkt.src,ipv4_pkt.dst,'icmp','',[dpid],'dropped')
                     else:
                         print "failed installing arp flow mod"
 
