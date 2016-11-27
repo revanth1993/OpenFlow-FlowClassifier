@@ -479,7 +479,7 @@ class flowClassifier(app_manager.RyuApp):
                     print "successfully installed ip flow in the switch"
                 else:
                     print "failed installing flow mod"
-
+                return
             if ipv4_pkt.proto == 6:
                 print "tcp packet received"
                 out_port,tcpport,sd  = self.get_tcp_outport(dpid,ipv4_pkt.dst,ipv4_pkt.src,tcp_pkt.dst_port,tcp_pkt.src_port)
@@ -517,7 +517,7 @@ class flowClassifier(app_manager.RyuApp):
                 else:
                     print "failed installing flow mod"
 
-
+                return
             if ipv4_pkt.proto == 17:
                 print "udp packet received"
                 out_port,udpport,sd  = self.get_udp_outport(dpid,ipv4_pkt.dst,ipv4_pkt.src,udp_pkt.dst_port,udp_pkt.src_port)

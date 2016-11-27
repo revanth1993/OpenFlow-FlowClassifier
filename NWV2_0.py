@@ -369,7 +369,6 @@ def deleteflow(controllerip,srcip,dstip,switches,tcpudp,port):
                 try:
                     serversock.send(str(flowDB))
                     print "Sent the updated flow DB"
-                    return
                 except:
                     print "Failed to send the flowDB"
 
@@ -389,7 +388,6 @@ def deleteflow(controllerip,srcip,dstip,switches,tcpudp,port):
                 try:
                     serversock.send(str(flowDB))
                     print "Sent the updated flow DB"
-                    return
                 except:
                     print "Failed to send the flowDB"
     switches.reverse()
