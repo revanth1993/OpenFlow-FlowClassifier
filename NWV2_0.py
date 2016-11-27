@@ -11,7 +11,7 @@ arp_table = {}
 hosts = []
 serversock=''
 
-controllerip = '199.165.75.182'
+controllerip = '129.7.98.43'
 
 def tcpconnect(controllerip):
     global serversock
@@ -402,7 +402,7 @@ def main():
     global serversock
 
     userinput = 'd'
-    print "Enter (1) for insert flows, (2) for view flowDB, (3) delete flows, (4) view topology, (c) to exit"
+    print "Enter (1) for insert flows, (2) for view flowDB, (3) delete flows, (4) view topology, (5) test connection, (c) to exit"
     while (userinput != 'c'):
         if userinput == '1':
             srcip = raw_input("source ip address:")
@@ -426,9 +426,9 @@ def main():
         elif userinput == '4':
             topologyviewer()
         elif userinput == '5':
-            print "send random"
-            serversock.send("random")
-        print "Enter (1) for insert flows, (2) for view flowDB, (3) delete flows, (4) view topology, (c) to exit"
+            print "send test"
+            serversock.send("test")
+        print "Enter (1) for insert flows, (2) for view flowDB, (3) delete flows, (4) view topology,(5) test connection, (c) to exit"
         userinput = raw_input()
 
 
