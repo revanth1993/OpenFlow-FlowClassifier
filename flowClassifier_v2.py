@@ -390,9 +390,12 @@ class flowClassifier(app_manager.RyuApp):
         udp_pkt = pkt.get_protocol(udp.udp)
 
         if arp_pkt:
-            if arp_pkt.dst_ip not in self.flowDB:
-                print "Received arp packet "
-                print dpid,arp_pkt.src_ip,in_port
+            if self.connection:
+                    self.connection.send(str(dpid)+','+str(arp_pkt.src_ip)+','+str(in_port))
+                    print "sending host discovery to Application"
+            else:
+                    print "Application not connected"
+
 
             out_port  = self.get_arp_outport(dpid,arp_pkt.dst_ip,arp_pkt.src_ip)
             if not out_port:
@@ -408,11 +411,6 @@ class flowClassifier(app_manager.RyuApp):
 
                 else:
                     print "failed installing arp flow mod"
-                if self.connection:
-                    self.connection.send(str(dpid)+','+str(arp_pkt.src_ip)+','+str(in_port))
-                    print "sending host discovery to Application"
-                else:
-                    print "Application not connected"
 
                 return
             if out_port == 'i':

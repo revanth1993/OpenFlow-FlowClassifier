@@ -5,6 +5,7 @@ import threading
 import networkx as nx
 import matplotlib.pyplot as plt
 import sys
+import time
 links_stats={}
 flowDB = {}
 arp_table = {}
@@ -176,6 +177,8 @@ def deletetcpudpflow(flow,srcip,dstip,tcpudp,port):
 def build_flowDB(srcip,dstip,port,tcp_udp,switches):
     global flowDB
     flow = get_flow(switches,dstip)
+    print flow
+    print switches
     if len(flow) != len(switches):
         print "Could not form a flow with the switches please retry"
         return []
@@ -400,38 +403,45 @@ def main():
     hostdiscoverythread.start()
 
     global serversock
+    try:
+        userinput = 'd'
+        print "Enter (1) for insert flows, (2) for view flowDB, (3) delete flows, (4) view topology, (5) test connection, (c) to exit"
+        while (userinput != 'c'):
+            if userinput == '1':
+                srcip = raw_input("source ip address:")
+                dstip = raw_input("destination ip address:")
+                portno = raw_input("Port no:")
+                protocol = raw_input("tcp/udp:")
+                switches = raw_input("list of comma seperated switches").split(',')
+                sendFlowtoController(controllerip,srcip,dstip,'tcp',portno,switches)
+            elif userinput == '2':
+                print "flow DataBase"
+                print "--------------------------------------------------------------"
+                print flowDB
+                print "--------------------------------------------------------------"
+            elif userinput == '3':
+                srcip = raw_input("source ip address:")
+                dstip = raw_input("destination ip address:")
+                protocol = raw_input("tcp/udp:")
+                portno = raw_input("Port no:")
+                switches = raw_input("list of comma seperated switches").split(',')
+                deleteflow(controllerip,srcip,dstip,switches,protocol,portno)
+            elif userinput == '4':
+                topologyviewer()
+            elif userinput == '5':
+                print "send test"
+                serversock.send("test")
+            print "Enter (1) for insert flows, (2) for view flowDB, (3) delete flows, (4) view topology,(5) test connection, (c) to exit"
+            userinput = raw_input()
 
-    userinput = 'd'
-    print "Enter (1) for insert flows, (2) for view flowDB, (3) delete flows, (4) view topology, (5) test connection, (c) to exit"
-    while (userinput != 'c'):
-        if userinput == '1':
-            srcip = raw_input("source ip address:")
-            dstip = raw_input("destination ip address:")
-            portno = raw_input("Port no:")
-            protocol = raw_input("tcp/udp:")
-            switches = raw_input("list of comma seperated switches").split(',')
-            sendFlowtoController(controllerip,srcip,dstip,'tcp',portno,switches)
-        elif userinput == '2':
-            print "flow DataBase"
-            print "--------------------------------------------------------------"
-            print flowDB
-            print "--------------------------------------------------------------"
-        elif userinput == '3':
-            srcip = raw_input("source ip address:")
-            dstip = raw_input("destination ip address:")
-            protocol = raw_input("tcp/udp:")
-            portno = raw_input("Port no:")
-            switches = raw_input("list of comma seperated switches").split(',')
-            deleteflow(controllerip,srcip,dstip,switches,protocol,portno)
-        elif userinput == '4':
-            topologyviewer()
-        elif userinput == '5':
-            print "send test"
-            serversock.send("test")
-        print "Enter (1) for insert flows, (2) for view flowDB, (3) delete flows, (4) view topology,(5) test connection, (c) to exit"
-        userinput = raw_input()
-
-
+    except:
+        print "exception occured kiling thread"
+        serversock.send(str(flowDB)+'%'+str(arp_table))
+        serversock.send('Kill thread')
+        hostdiscoverythread._Thread__stop()
+        sys.exit(1)
+    serversock.send(str(flowDB)+'%'+str(arp_table))
+    time.sleep(1)
     serversock.send('Kill thread')
     hostdiscoverythread._Thread__stop()
 
