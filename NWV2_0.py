@@ -408,11 +408,11 @@ def main():
         print "Enter (1) for insert flows, (2) for view flowDB, (3) delete flows, (4) view topology, (5) test connection, (c) to exit"
         while (userinput != 'c'):
             if userinput == '1':
-                srcip = raw_input("source ip address:")
-                dstip = raw_input("destination ip address:")
-                portno = raw_input("Port no:")
-                protocol = raw_input("tcp/udp:")
-                switches = raw_input("list of comma seperated switches").split(',')
+                srcip = raw_input("source ip address:-")
+                dstip = raw_input("destination ip address:-")
+                portno = raw_input("Port no:-")
+                protocol = raw_input("tcp/udp:-")
+                switches = raw_input("list of comma seperated switches:-").split(',')
                 sendFlowtoController(controllerip,srcip,dstip,'tcp',portno,switches)
             elif userinput == '2':
                 print "flow DataBase"
@@ -420,11 +420,11 @@ def main():
                 print flowDB
                 print "--------------------------------------------------------------"
             elif userinput == '3':
-                srcip = raw_input("source ip address:")
-                dstip = raw_input("destination ip address:")
-                protocol = raw_input("tcp/udp:")
-                portno = raw_input("Port no:")
-                switches = raw_input("list of comma seperated switches").split(',')
+                srcip = raw_input("source ip address:-")
+                dstip = raw_input("destination ip address:-")
+                protocol = raw_input("tcp/udp:-")
+                portno = raw_input("Port no:-")
+                switches = raw_input("list of comma seperated switches-").split(',')
                 deleteflow(controllerip,srcip,dstip,switches,protocol,portno)
             elif userinput == '4':
                 topologyviewer()
