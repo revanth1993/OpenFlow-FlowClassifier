@@ -56,7 +56,7 @@ class flowClassifier(app_manager.RyuApp):
                         self.connection=''
                         break;
                     
-                    if '%' in data:
+                    elif '%' in data:
                         self.flowDB,self.arptable = map(ast.literal_eval,data.split('%'))
                         print "updated flowDB"
                         print "--------------------------------------------------------"
@@ -67,6 +67,10 @@ class flowClassifier(app_manager.RyuApp):
                         print "--------------------------------------------------------"
                         print self.arptable
                         print "--------------------------------------------------------"
+
+                    elif data=='test':
+                        print "test worked"
+
                     elif data:
                         print "updated flowDB"
                         print "--------------------------------------------------------"

@@ -138,21 +138,21 @@ def pushflowDB():
     except:
         print "flow DB update failed to send"
 
-def deletearpflow(flow,dstip):
+def deletearpflow(flow,srcip,dstip):
     for dpid in flow:
-        r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x806,"nw_dst":"'+str(dstip)+'"},"actions":[]}')
+        r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x806,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'"},"actions":[]}')
         print "removing arp flow"
-        print 'http://'+controllerip+':8080/stats/flowentry/delete data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x806,"nw_dst":"'+str(dstip)+'"},"actions":[]}'
+        print 'http://'+controllerip+':8080/stats/flowentry/delete data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x806,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'"},"actions":[]}'
         if r.status_code == requests.codes.ok:
             print "successfully removed flow in the switch"
         else:
             print "failed removing flow"
 
-def deleteicmpflow(flow,dstip):
+def deleteicmpflow(flow,srcip,dstip):
     for dpid in flow:
-        r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x800,"nw_dst":"'+str(dstip)+'","ip_proto":1},"actions":[]}')
+        r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":1},"actions":[]}')
         print "removing icmp flow"
-        print 'http://'+controllerip+':8080/stats/flowentry/delete data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x800,"nw_dst":"'+str(dstip)+'","ip_proto":1},"actions":[]}'
+        print 'http://'+controllerip+':8080/stats/flowentry/delete data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":1},"actions":[]}'
         if r.status_code == requests.codes.ok:
             print "successfully removed icmp flow in the switch"
         else:
@@ -164,9 +164,9 @@ def deletetcpudpflow(flow,srcip,dstip,tcpudp,port):
     else:
         ipproto = 17
     for dpid in flow:
-        r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":'+ipproto+','+tcpudp+':"'+str(port)+'"},"actions":[]}')
+        r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":'+ipproto+','+tcpudp+':"'+str(port)+'"},"actions":[]}')
         print "tcp flow mod for switch"
-        print 'http://'+controllerip+'8080/stats/flowentry/delete,data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":'+ipproto+','+tcpudp+':"'+str(port)+'"},"actions":[]}'
+        print 'http://'+controllerip+'8080/stats/flowentry/delete,data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":'+ipproto+','+tcpudp+':"'+str(port)+'"},"actions":[]}'
         if r.status_code == requests.codes.ok:
             print "successfully removed tcp flow in the switch"
         else:
@@ -221,7 +221,7 @@ def build_flowDB(srcip,dstip,port,tcp_udp,switches):
                 if 'arp' in flowDB[srcip][dstip]:
                     if flowDB[srcip][dstip]['arp']['default'][1] == 'dropped':
                         print "srcip and dstip present arp status dropped"
-                        deletearpflow(flowDB[srcip][dstip]['arp']['default'][0],dstip)
+                        deletearpflow(flowDB[srcip][dstip]['arp']['default'][0],srcip,dstip)
                         flow = get_flow(switches,dstip)
                         flowDB[srcip][dstip]['arp'] = {}
                         flowDB[srcip][dstip]['arp']['default'] = [flow,'install']
@@ -248,7 +248,7 @@ def build_flowDB(srcip,dstip,port,tcp_udp,switches):
                 if 'icmp' in flowDB[srcip][dstip]:
                     if flowDB[srcip][dstip]['icmp']['default'][1] == 'dropped':
                         print "srcip and dstip present icmp status dropped"
-                        deleteicmpflow(flowDB[srcip][dstip]['icmp']['default'][0],dstip)
+                        deleteicmpflow(flowDB[srcip][dstip]['icmp']['default'][0],srcip,dstip)
                         flow = get_flow(switches,dstip)
                         flowDB[srcip][dstip]['icmp'] = {}
                         flowDB[srcip][dstip]['icmp']['default'] = [flow,'install']
@@ -321,31 +321,31 @@ def sendFlowtoController(controller_ip,srcip,dstip,tcp_udp,portno,switches):
 
 
 
-def deletetcpudpsrcflow(controllerip,dpid,dstip,tcpudp,tcpport,out_port):
+def deletetcpudpsrcflow(controllerip,dpid,srcip,dstip,tcpudp,tcpport,out_port):
 
     if tcpudp == 'tcp':
         ip_proto = '6'
     else:
         ip_proto = '17'
 
-    r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":'+ip_proto+',"'+tcpudp+'_src":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
+    r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":'+ip_proto+',"'+tcpudp+'_src":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
     print "tcp flow mod for switch"
-    print 'http://'+controllerip+':8080/stats/flowentry/delete,data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":'+ip_proto+','+tcpudp+'_src":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
+    print 'http://'+controllerip+':8080/stats/flowentry/delete,data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":'+ip_proto+','+tcpudp+'_src":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
     if r.status_code == requests.codes.ok:
         print "successfully removed tcp flow in the switch"
     else:
         print "failed removing flow "
 
-def deletetcpudpdstflow(controllerip,dpid,dstip,tcpudp,tcpport,out_port):
+def deletetcpudpdstflow(controllerip,dpid,srcip,dstip,tcpudp,tcpport,out_port):
 
     if tcpudp == 'tcp':
         ip_proto = '6'
     else:
         ip_proto = '17'
 
-    r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":'+ip_proto+',"'+tcpudp+'_dst":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
+    r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":'+ip_proto+',"'+tcpudp+'_dst":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
     print "tcp flow mod for switch"
-    print 'http://'+controllerip+':8080/stats/flowentry/delete,data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_dst":"'+str(dstip)+'","ip_proto":'+ip_proto+','+tcpudp+'_dst":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
+    print 'http://'+controllerip+':8080/stats/flowentry/delete,data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":'+ip_proto+','+tcpudp+'_dst":"'+str(tcpport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
     if r.status_code == requests.codes.ok:
         print "successfully removed tcp flow in the switch"
     else:
@@ -363,7 +363,7 @@ def deleteflow(controllerip,srcip,dstip,switches,tcpudp,port):
                     print "sending delete flow request to the controller"
                     if protocols == port:
                         for switch in flowDB[srcip][dstip][tcpudp+'_dst'][protocols][0]:
-                            deletetcpudpdstflow(controllerip, switch[0], dstip, tcpudp, port, switch[1])
+                            deletetcpudpdstflow(controllerip, switch[0], srcip, dstip, tcpudp, port, switch[1])
                 print "Emptying up the Flow DB for srcip %s dstip %s and sending to the controller" %(srcip,dstip)
                 flowDB[srcip][dstip][tcpudp+'_dst'][port]=[]
                 try:
@@ -380,7 +380,7 @@ def deleteflow(controllerip,srcip,dstip,switches,tcpudp,port):
                 for protocols in flowDB[dstip][srcip][tcpudp+'_src']:
                     if protocols == port:
                         for switch in flowDB[dstip][srcip][tcpudp+'_src'][protocols][0]:
-                            deletetcpudpsrcflow(controllerip, switch[0], srcip, tcpudp, port, switch[1])
+                            deletetcpudpsrcflow(controllerip, switch[0], dstip, srcip, tcpudp, port, switch[1])
 
             
                 print "Emptying up the Flow DB for dstip %s srcip %s and sending to the controller" %(dstip,srcip)
