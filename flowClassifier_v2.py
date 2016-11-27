@@ -441,6 +441,11 @@ class flowClassifier(app_manager.RyuApp):
 
         elif ipv4_pkt:
             print "ipv4 packet"
+            if self.connection:
+                    self.connection.send(str(dpid)+','+str(ipv4_pkt.src_ip)+','+str(in_port))
+                    print "sending host discovery to Application"
+            else:
+                    print "Application not connected"
 
             if ipv4_pkt.proto == 1:
                 print "icmp packet recieved"

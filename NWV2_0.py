@@ -50,7 +50,7 @@ def hostDiscovery():
                 print flowDB
                 print arp_table
                 continue
-            if '#' in data:
+            elif '#' in data:
                 print "updating flow DB " 
                 flowDB = ast.literal_eval(data.split('#')[1])
                 print "--------------------------------------------------------"
@@ -112,7 +112,7 @@ def build_link_stats(controller_ip):
 
 def get_flow(switchlist,dstip):
     flow=[]
-    if len(switchlist) > len(arp_table):
+    if len(switchlist) < len(arp_table):
         print "cannot construct a flow"
         return flow
     global links_stats
