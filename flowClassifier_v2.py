@@ -300,7 +300,6 @@ class flowClassifier(app_manager.RyuApp):
     def updateflowDBsend(self,srcip,dstip,protocol,port,flow,status):
         if srcip in self.flowDB:
             if dstip in self.flowDB[srcip]:
-                if protocol in self.flowDB[srcip][dstip]:
                     if protocol == 'arp':
                         print "no arp entry!! dropping"
                         self.flowDB[srcip][dstip]['arp']={}
@@ -312,8 +311,12 @@ class flowClassifier(app_manager.RyuApp):
                         self.flowDB[srcip][dstip]['icmp']['default'] = [flow,status]
 
                     else:
-                        self.flowDB[srcip][dstip][protocol] = {}
-                        self.flowDB[srcip][dstip][protocol][port] = [flow,status]
+                        if protocol in self.flowDB[srcip][dstip]:
+                                self.flowDB[srcip][dstip][protocol][port] = [flow,status]
+                        else:
+                            self.flowDB[srcip][dstip][protocol]={}
+                            self.flowDB[srcip][dstip][protocol][port] = [flow,status]
+
 
             else:
                 print "no dstip entry!! dropping"
