@@ -159,6 +159,30 @@ def deleteicmpflow(flow,srcip,dstip):
         else:
             print "failed removing icmp flow"
 
+def deleteinstalledarpflow(flow,srcip,dstip):
+    for switches in flow:
+        dpid = switches[0]
+        out_port = switches[1]
+        r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x806,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
+        print "removing arp flow"
+        print 'http://'+controllerip+':8080/stats/flowentry/delete data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x806,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
+        if r.status_code == requests.codes.ok:
+            print "successfully removed flow in the switch"
+        else:
+            print "failed removing flow"
+
+def deleteinstalledicmpflow(flow,srcip,dstip):
+    for switches in flow:
+        dpid = switches[0]
+        out_port = switches[1]
+        r = requests.post('http://'+controllerip+':8080/stats/flowentry/delete',data='{"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":1},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
+        print "removing icmp flow"
+        print 'http://'+controllerip+':8080/stats/flowentry/delete data={"dpid":"'+str('0x'+dpid[4:])+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":1},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}'
+        if r.status_code == requests.codes.ok:
+            print "successfully removed icmp flow in the switch"
+        else:
+            print "failed removing icmp flow"
+
 def deletetcpudpflow(flow,srcip,dstip,tcpudp,port):
     if 'tcp' in tcpudp:
         ipproto = 6
@@ -358,7 +382,7 @@ def deleteflow(controllerip,srcip,dstip,switches,tcpudp,port):
     
     global flowDB
     global serversock
-
+    number_tcpudpflows=0
     if srcip in flowDB:
         if dstip in flowDB[srcip]:
             if tcpudp+'_dst' in flowDB[srcip][dstip]:
@@ -367,7 +391,12 @@ def deleteflow(controllerip,srcip,dstip,switches,tcpudp,port):
                     if protocols == port:
                         for switch in flowDB[srcip][dstip][tcpudp+'_dst'][protocols][0]:
                             deletetcpudpdstflow(controllerip, switch[0], srcip, dstip, tcpudp, port, switch[1])
+                    number_tcpudpflows = number_tcpudpflows + 1
                 print "Emptying up the Flow DB for srcip %s dstip %s and sending to the controller" %(srcip,dstip)
+                if number_tcpudpflows == 1:
+                    print "only one entry for the TCP/UDP flow found deleting the arp and icmp flow entries"
+                    deleteinstalledarpflow(flowDB[srcip][dstip]['arp'][1],srcip,dstip)
+                    deleteinstalledicmpflow(flowDB[srcip][dstip]['icmp'][1],srcip,dstip)
                 flowDB[srcip][dstip][tcpudp+'_dst'][port]=[]
                 try:
                     serversock.send(str(flowDB))
@@ -377,6 +406,7 @@ def deleteflow(controllerip,srcip,dstip,switches,tcpudp,port):
 
 
     switches.reverse()
+    number_tcpudpflows = 0
     if dstip in flowDB:
         if srcip in flowDB[dstip]:
             if tcpudp+'_src' in flowDB[dstip][srcip]:
@@ -384,9 +414,13 @@ def deleteflow(controllerip,srcip,dstip,switches,tcpudp,port):
                     if protocols == port:
                         for switch in flowDB[dstip][srcip][tcpudp+'_src'][protocols][0]:
                             deletetcpudpsrcflow(controllerip, switch[0], dstip, srcip, tcpudp, port, switch[1])
+                    number_tcpudpflows = number_tcpudpflows + 1
 
-            
                 print "Emptying up the Flow DB for dstip %s srcip %s and sending to the controller" %(dstip,srcip)
+                if number_tcpudpflows == 1:
+                    print "only one entry for the TCP/UDP flow found deleting the arp and icmp flow entries"
+                    deleteinstalledarpflow(flowDB[srcip][dstip]['arp'][1],dstip,srcip)
+                    deleteinstalledicmpflow(flowDB[srcip][dstip]['icmp'][1],dstip,srcip)
                 flowDB[dstip][srcip][tcpudp+'_src'][port]=[]
                 try:
                     serversock.send(str(flowDB))
@@ -394,8 +428,6 @@ def deleteflow(controllerip,srcip,dstip,switches,tcpudp,port):
                 except:
                     print "Failed to send the flowDB"
     switches.reverse()
-
-
 
 def main():
     tcpconnect(controllerip)
