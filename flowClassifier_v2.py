@@ -176,7 +176,7 @@ class flowClassifier(app_manager.RyuApp):
                             switch = switches[0]
                             hexdpid = '0x'+switch[4:]
                             out_port = switches[1]
-                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid":"'+str(hexdpid)+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":6,"tcp_dst":"'+str(dstport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
+                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid":"'+str(hexdpid)+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":6,"tcp_dst":"'+str(dstport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
                             if r.status_code == requests.codes.ok:
                                 print "successfully installed tcp flow in the switch"
                                 self.flowDB[srcip][dstip]['tcp_dst'][str(dstport)][1] = 'installed'
@@ -252,7 +252,7 @@ class flowClassifier(app_manager.RyuApp):
                             switch = switches[0]
                             hexdpid = '0x'+switch[4:]
                             out_port = switches[1]
-                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid":"'+str(hexdpid)+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":17,"udp_dst":"'+str(dstport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
+                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid":"'+str(hexdpid)+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":17,"udp_dst":"'+str(dstport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
                             if r.status_code == requests.codes.ok:
                                 print "successfully installed tcp flow in the switch"
                                 self.flowDB[srcip][dstip]['udp_dst'][str(srcport)][1] = 'installed'
@@ -279,7 +279,7 @@ class flowClassifier(app_manager.RyuApp):
                             switch = switches[0]
                             hexdpid = '0x'+switch[4:]
                             out_port = switches[1]
-                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid":"'+str(hexdpid)+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":17,"udp_src":"'+str(srcport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
+                            r = requests.post('http://localhost:8080/stats/flowentry/add',data='{"dpid":"'+str(hexdpid)+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(srcip)+'","nw_dst":"'+str(dstip)+'","ip_proto":17,"udp_src":"'+str(srcport)+'"},"actions":[{"type":"OUTPUT","port": '+str(out_port)+'}]}')
                             if r.status_code == requests.codes.ok:
                                 print "successfully installed tcp flow in the switch"
                             else:
@@ -503,7 +503,7 @@ class flowClassifier(app_manager.RyuApp):
                     else:
                         print "failed installing flow mod"
                     print "tcp flow mod for switch"
-                    print 'http://localhost:8080/stats/flowentry/add,data={"dpid":"'+dpid+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(ipv4_pkt.src)+'","nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":6,"tcp_dst":"'+str(tcp_pkt.dst_port)+'"},"actions":[]}'
+                    print 'http://localhost:8080/stats/flowentry/add,data={"dpid":"'+dpid+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(ipv4_pkt.src)+'","nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":6,"tcp_dst":"'+str(tcp_pkt.dst_port)+'"},"actions":[]}'
                     return
                 if out_port == 'i':
                     print "already installed"
@@ -541,7 +541,7 @@ class flowClassifier(app_manager.RyuApp):
                     else:
                         print "failed installing flow mod"
                     print "tcp flow mod for switch"
-                    print 'http://localhost:8080/stats/flowentry/add,data={"dpid":"'+dpid+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 65535,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(ipv4_pkt.src)+'","nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":17,"udp_dst":"'+str(udp_pkt.dst_port)+'"},"actions":[]}'
+                    print 'http://localhost:8080/stats/flowentry/add,data={"dpid":"'+dpid+'","table_id": 0,"idle_timeout": 300,"hard_timeout": 300,"priority": 2,"flags": 1,"match":{"eth_type":0x0800,"nw_src":"'+str(ipv4_pkt.src)+'","nw_dst":"'+str(ipv4_pkt.dst)+'","ip_proto":17,"udp_dst":"'+str(udp_pkt.dst_port)+'"},"actions":[]}'
                     return
                 if out_port == 'i':
                     print "already installed"
