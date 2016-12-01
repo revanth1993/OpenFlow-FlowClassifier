@@ -64,12 +64,12 @@ def hostDiscovery():
                 print flowDB
                 print arp_table
                 continue
-            elif '##' in data:
-                flow = re.search(".*##(.*)--")
+            elif '##' and '--' in data:
+                flow = re.search(".*##(.*)--",data)
                 if flow:
 
                     print "updating flow DB "
-                    flowDB = ast.literal_eval(flow.group(0))
+                    flowDB = ast.literal_eval(flow.group(1))
                     print "--------------------------------------------------------"
                     print flowDB
                     print "--------------------------------------------------------"
