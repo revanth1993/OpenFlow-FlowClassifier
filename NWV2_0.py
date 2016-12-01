@@ -6,6 +6,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import sys
 import time
+import re
 links_stats={}
 flowDB = {}
 arp_table = {}
@@ -52,6 +53,7 @@ def hostDiscovery():
     global arp_table
     while(1):
         try:
+            time.sleep(0.5)
             data = serversock.recv(4096)
             print "--------------------Received data from Client-----------------------"
             print data
@@ -63,12 +65,15 @@ def hostDiscovery():
                 print arp_table
                 continue
             elif '##' in data:
-                print "updating flow DB " 
-                flowDB = ast.literal_eval(data.split('##')[1])
-                print "--------------------------------------------------------"
-                print flowDB
-                print "--------------------------------------------------------"
-                continue
+                flow = re.search(".*##(.*)--")
+                if flow:
+
+                    print "updating flow DB "
+                    flowDB = ast.literal_eval(flow.group(0))
+                    print "--------------------------------------------------------"
+                    print flowDB
+                    print "--------------------------------------------------------"
+                    continue
             switch,host,port = data.split(',')
             print "Received Host ARP"
             print "--------------------------------------------------------"

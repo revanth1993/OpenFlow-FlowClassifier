@@ -356,7 +356,7 @@ class flowClassifier(app_manager.RyuApp):
         if self.connection:
             print "sending flowDB"
             print self.flowDB
-            self.connection.send("##"+str(self.flowDB)+'##')
+            self.connection.send("##"+str(self.flowDB)+'--')
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
 
