@@ -13,6 +13,16 @@ hosts = []
 serversock=''
 
 controllerip = '199.165.75.134'
+def recvall(sock):
+    BUFF_SIZE = 4096 # 4 KiB
+    data = ""
+    while True:
+        part = sock.recv(BUFF_SIZE)
+        data += part
+        if part < BUFF_SIZE:
+            # either 0 or end of data
+            break
+    return data
 
 def tcpconnect(controllerip):
     global serversock
@@ -43,16 +53,18 @@ def hostDiscovery():
     while(1):
         try:
             data = serversock.recv(4096)
-            
+            print "--------------------Received data from Client-----------------------"
+            print data
+            print "--------------------------------------------------------"
             if '%' in data:
                 flowDB,arp_table = map(ast.literal_eval,data.split('%'))
                 print "first update flowdb and arptable"
                 print flowDB
                 print arp_table
                 continue
-            elif '#' in data:
+            elif '##' in data:
                 print "updating flow DB " 
-                flowDB = ast.literal_eval(data.split('#')[1])
+                flowDB = ast.literal_eval(data.split('##')[1])
                 print "--------------------------------------------------------"
                 print flowDB
                 print "--------------------------------------------------------"
