@@ -14,16 +14,6 @@ hosts = []
 serversock=''
 
 controllerip = '199.165.75.134'
-def recvall(sock):
-    BUFF_SIZE = 4096 # 4 KiB
-    data = ""
-    while True:
-        part = sock.recv(BUFF_SIZE)
-        data += part
-        if part < BUFF_SIZE:
-            # either 0 or end of data
-            break
-    return data
 
 def tcpconnect(controllerip):
     global serversock
@@ -458,7 +448,7 @@ def main():
     global serversock
     try:
         userinput = 'd'
-        print "Enter (1) for insert flows, (2) for view flowDB, (3) delete flows, (4) view topology, (5) test connection, (c) to exit"
+        print "Enter (1) for insert flows, (2) for view flowDB, (3) delete flows, (4) view topology, (5) test connection,(6)hosts (c) to exit"
         while (userinput != 'c'):
             if userinput == '1':
                 srcip = raw_input("source ip address:-")
@@ -484,7 +474,12 @@ def main():
             elif userinput == '5':
                 print "send test"
                 serversock.send("test")
-            print "Enter (1) for insert flows, (2) for view flowDB, (3) delete flows, (4) view topology,(5) test connection, (c) to exit"
+            elif userinput == '6':
+                print "Switch to host mapping"
+                print "--------------------------------------------------------------"
+                print arp_table
+                print "--------------------------------------------------------------"
+            print "Enter (1) for insert flows, (2) for view flowDB, (3) delete flows, (4) view topology,(5) test connection,(6)hosts (c) to exit"
             userinput = raw_input()
 
     except:
